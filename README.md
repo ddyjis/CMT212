@@ -2,6 +2,24 @@
 
 The steps I used to create this visualisation
 
+## Datasets
+
+I found 3 datasets related to children health. Namely:
+
+1. Under 5 Mortarity in countries across the world from UNICEF
+2. Vaccine coverage across the world from WHO
+3. Vaccine curable diseases incident rate across the world from WHO
+
+I believe these data are related and hope to provide evidence that vaccine is effective in saving children's lives
+
+## Do I really need a map?
+
+My datasets contain geographic information. It is intuitive to think to visualise them on a map. However, is the location matter in telling the story? Will 2D scatter plot or bar charts enough to deliver the message? Deepter consideration is needed in finalising the design. 
+
+The objective of the visualisation in to investigate the effectiveness of vaccine in saving children's lives. If I were to visualise the data in a map, it would be better to show the result, i.e. the under 5 mortality rates, on it. The next question is, do I really need a map? The mortarity rates much lower in developed countries and higher in developing countries. These two types of countries are geographically distributed. Europe and North America are well developed while Africa and part of Asia are still developing. In addition, the data span across years. Visualising on a map can show the trend and the distribution across the globe.
+
+To make the whole visulaisation easy to follow, only one dataset is shown on a map while the other two will be shown using line charts.
+
 ## Creating the map
 
 http://www.tnoda.com/blog/2013-12-07
@@ -37,7 +55,7 @@ http://www.tnoda.com/blog/2013-12-07
 
 4. http://jsonviewer.stack.hu/ is useful in displaying the structure of JSON 
 
-5. Data use ISO code to represent different countries. In the topojson, different shape can be identified by different standards, e.g. according to sovereign states, map units etc. 
+5. Data use ISO code to represent different countries. In the topojson, different shape can be identified by different standards, e.g. according to sovereign states, map units etc. Luckily, boundary data in the topojson contain the ISO name property so I do not have to convert/combine boundaries
 
 
 
@@ -47,5 +65,33 @@ Got the data for vaccine coverage, disease incidence, under 5 child motarity rat
 
 check http://www.who.int/immunization/diseases/en/ for correspoinding vaccines, disease pairs
 
-### Vaccine and targeted disease
+### Preprocessing
 
+All data given were in spreadsheet format. Combine sheets into the same sheet and then save as csv format.
+
+Under 5 mortarity rate is in reversed column order as vaccine coverage and disease incidence rate. It is reversed in excel.
+
+Under 5 mortarity rate is the Probability of dying between birth and exactly 5 years of age, expressed per 1,000 live births. ( https://data.unicef.org/topic/child-survival/under-five-mortality/ )
+
+I got the dataset from 2 sources, vaccine coverage and vaccine curible diseases incidence rate from WHO and under 5 martarity rate from UNICEF. All 3 datasets contains worldwide data. Have to check if they cover the same set of countries/regions.
+
+```python
+import pandas as pd
+under5 = pd.read_csv("data/Under5Mortarity.csv")
+vaccine = pd.read_csv("data/vaccine.csv")
+incidence = pd.read_csv("data/incidence.csv")
+
+# Find the number of countries covered in each dataset
+# ref:https://chrisalbon.com/python/pandas_list_unique_values_in_column.html
+print("Countries in under5: {0}, vaccine: {1}, incidence: {2}".format(len(under5['Country Name'].unique()), len(vaccine.Cname.unique()), len(incidence.Cname.unique())))
+
+# print the intersection of countries of 3 datasets
+# ref:http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Index.intersection.html
+under5_idx = pd.Index(under5['Country Name'])
+vaccine_idx = pd.Index(vaccine.Cname.unique())
+incidence_idx = pd.Index(incidence.Cname.unique())
+common_countries = under5_idx.intersection(vaccine_idx).intersection(incidence_idx)
+print(len(common_countries))
+```
+
+pandas run on 0.19.2 version which ignores the \ufeff Byte Order Marker at the begining of csv files
