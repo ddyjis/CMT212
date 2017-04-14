@@ -79,9 +79,9 @@ I got the dataset from 2 sources, vaccine coverage and vaccine curible diseases 
 
 ```python
 import pandas as pd
-under5 = pd.read_csv("data/Under5Mortarity.csv")
-vaccine = pd.read_csv("data/vaccine.csv")
-incidence = pd.read_csv("data/incidence.csv")
+under5 = pd.read_csv("data/Pre-processing/Under5Mortarity.csv")
+vaccine = pd.read_csv("data/Pre-processing/vaccine.csv")
+incidence = pd.read_csv("data/Pre-processing/incidence.csv")
 
 # Find the number of ISO code covered in each dataset
 # ref:https://chrisalbon.com/python/pandas_list_unique_values_in_column.html
@@ -111,7 +111,7 @@ Output the ISO code from dataset to json file
 
 ``` python
 import json
-ISO_File = open("ISO_Code_list.json", "w")
+ISO_File = open("data/Pre-processing/ISO_Code_list.json", "w")
 ISO_File.write(json.dumps(list(common_countries.to_series())))
 ISO_File.close()
 ```
@@ -154,4 +154,22 @@ The resulting array contains 183 unique ISO codes. Therefore, these 183 countrie
 ```
 AFG,ALB,DZA,AND,AGO,ARG,ARM,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BLZ,BEN,BTN,BOL,BWA,BRA,BRN,BGR,BFA,BDI,CPV,KHM,CMR,CAN,CAF,TCD,CHL,CHN,COL,COM,COG,COK,CRI,CIV,HRV,CUB,CYP,CZE,PRK,COD,DNK,DJI,DMA,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FJI,FIN,FRA,GAB,GMB,DEU,GHA,GRC,GRD,GTM,GIN,GNB,GUY,HTI,HND,HUN,ISL,IND,IDN,IRN,IRL,ISR,ITA,JAM,JPN,JOR,KAZ,KEN,KIR,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LTU,LUX,MDG,MWI,MYS,MDV,MLI,MLT,MHL,MRT,MUS,MEX,FSM,MCO,MNG,MNE,MAR,MOZ,MMR,NAM,NRU,NPL,NZL,NIC,NER,NGA,NIU,NOR,OMN,PAK,PLW,PAN,PRY,PER,PHL,POL,QAT,KOR,MDA,ROU,RUS,RWA,KNA,LCA,VCT,WSM,SMR,STP,SAU,SEN,SYC,SLE,SGP,SVK,SVN,SLB,ZAF,SSD,ESP,LKA,SDN,SUR,SWZ,SWE,CHE,SYR,TJK,THA,MKD,TLS,TGO,TON,TTO,TUN,TUR,TKM,TUV,UGA,UKR,ARE,TZA,USA,URY,UZB,VUT,VEN,VNM,YEM,ZMB,ZWE
 ```
+
+Next, convertion of ISO code to country names
+
+From https://en.wikipedia.org/wiki/ISO_3166-1, I got the conversion table of ISO code to country names and then convert to json file with the following code
+
+```python
+import csv
+ISO2Names = {}
+with open("data/Pre-processing/ISO2Names.csv", "r") as f:
+    reader = csv.reader(f)
+    for row in reader:
+        ISO2Names[row[0]] = row[1]
+ISO2Name_File = open("data/Pre-processing/ISO2Name.json", "w")
+ISO2Name_File.write(json.dumps(ISO2Names))
+ISO2Name_File.close()
+```
+
+
 
