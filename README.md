@@ -171,5 +171,24 @@ ISO2Name_File.write(json.dumps(ISO2Names))
 ISO2Name_File.close()
 ```
 
+Now, there are common keys for the data to match. 
+
+Then, the datasets have to be filtered.
+
+```python
+under5_filtered = under5.loc[under5['ISO Code'].isin(common_countries)]
+vaccine_filtered = vaccine.loc[vaccine.ISO_code.isin(common_countries)]
+incidence_filtered = incidence.loc[incidence.ISO_code.isin(common_countries)]
+```
+
+Under 5 mortarity dataset contains many zeros and they should be converted to `NaN` by the following code
+
+```python
+import numpy as np
+under5_filtered = under5_filtered.replace(0.0, np.nan)
+```
+
+Now the data are prepared for d3.js to read
+
 
 

@@ -17,8 +17,11 @@
         var svg, g;
         var projection, path;
         var width, height;
+        var ISO2Name, Name2ISO;
+        var under5_data, vaccine_data, incidence_data;
 
-        var ISO_list = [];
+        // code used to find the intersection of ISO codes across datasets and topojson
+        // var ISO_list = [];
 
         function draw(world) {
             projection
@@ -44,12 +47,13 @@
                     return d.properties.ISO_A3;
                 })
                 .attr("d", path)
-                .each(function(d) {
-                    // count the ISO code
-                    if (ISO_list.indexOf(d.properties.ISO_A3) === -1) {
-                        ISO_list.push(d.properties.ISO_A3)
-                    }
-                })
+                // code used to find the intersection of ISO codes across datasets and topojson
+                // .each(function(d) {
+                //     // count the ISO code
+                //     if (ISO_list.indexOf(d.properties.ISO_A3) === -1) {
+                //         ISO_list.push(d.properties.ISO_A3)
+                //     }
+                // })
         }
 
         function init() {
@@ -66,7 +70,7 @@
             // according to https://www.wikiwand.com/en/List_of_countries_by_easternmost_point,
             // most eastern part of the world is Russia at 169.40 W
             projection = d3.geoEquirectangular()
-                .rotate([-10.6, 0]); // rotate a little for displaying Russia as in a whole piece
+                .rotate([-10.6, 0]); // rotate a little for displaying Russia in a whole piece
 
 
             path = d3.geoPath()
@@ -74,13 +78,23 @@
 
             d3.queue()
                 .defer(d3.json, "data/countries.topo.json")
-                .await(function(error, world) {
+                .defer(d3.json, "data/ISO2Name.json")
+                .defer(d3.csv, "data/under5.csv")
+                .defer(d3.csv, "data/vaccine.csv")
+                .defer(d3.csv, "data/incidence.csv")
+                .await(function(error, world, ISO2Name_data, under5Data, vaccineData, incidenceData) {
                     draw(world);
-                    $.getJSON("ISO_Code_list.json", function(dataset_ISO_list) {
-                        final_ISO = _.intersection(dataset_ISO_list, ISO_list);
-                        console.log(final_ISO);
-                        alert(final_ISO);
-                    })
+                    // code used to find the intersection of ISO codes across datasets and topojson
+                    // $.getJSON("ISO_Code_list.json", function(dataset_ISO_list) {
+                    //     final_ISO = _.intersection(dataset_ISO_list, ISO_list);
+                    //     console.log(final_ISO);
+                    //     alert(final_ISO);
+                    // })
+                    ISO2Name = ISO2Name_data;
+                    Name2ISO = _.invert(ISO2Name);
+                    under5_data = under5Data;
+                    vaccine_data = vaccineData;
+                    incidence_data = incidenceData;
                 })
         }
 
