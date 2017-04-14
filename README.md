@@ -55,9 +55,11 @@ http://www.tnoda.com/blog/2013-12-07
 
 4. http://jsonviewer.stack.hu/ is useful in displaying the structure of JSON 
 
-5. Data use ISO code to represent different countries. In the topojson, different shape can be identified by different standards, e.g. according to sovereign states, map units etc. Luckily, boundary data in the topojson contain the ISO name property so I do not have to convert/combine boundaries
+5. Dataset use ISO code to represent different countries. In the topojson, different shape can be identified by different standards, e.g. according to sovereign states, map units etc. Luckily, boundary data in the topojson contain the ISO name property for me to match with dataset. The ISO code is also used as the id for each shape in the svg
 
+Using the code from lab, I successfully generate a world map
 
+![](http://ww3.sinaimg.cn/large/006tNbRwgy1felxotz5vij312s0feq5y.jpg)
 
 ## Analysing Data
 
@@ -81,17 +83,75 @@ under5 = pd.read_csv("data/Under5Mortarity.csv")
 vaccine = pd.read_csv("data/vaccine.csv")
 incidence = pd.read_csv("data/incidence.csv")
 
-# Find the number of countries covered in each dataset
+# Find the number of ISO code covered in each dataset
 # ref:https://chrisalbon.com/python/pandas_list_unique_values_in_column.html
-print("Countries in under5: {0}, vaccine: {1}, incidence: {2}".format(len(under5['Country Name'].unique()), len(vaccine.Cname.unique()), len(incidence.Cname.unique())))
+print("ISO Code in under5: {0}, vaccine: {1}, incidence: {2}".format(len(under5['ISO Code'].unique()), len(vaccine.ISO_code.unique()), len(incidence.ISO_code.unique())))
 
-# print the intersection of countries of 3 datasets
+# print the intersection of ISO_code of 3 datasets
 # ref:http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Index.intersection.html
-under5_idx = pd.Index(under5['Country Name'])
-vaccine_idx = pd.Index(vaccine.Cname.unique())
-incidence_idx = pd.Index(incidence.Cname.unique())
+under5_idx = pd.Index(under5['ISO Code'])
+vaccine_idx = pd.Index(vaccine.ISO_code.unique())
+incidence_idx = pd.Index(incidence.ISO_code.unique())
 common_countries = under5_idx.intersection(vaccine_idx).intersection(incidence_idx)
 print(len(common_countries))
 ```
 
-pandas run on 0.19.2 version which ignores the \ufeff Byte Order Marker at the begining of csv files
+pandas run on 0.19.2 version which ignores the \ufeff Byte Order Marker at the begining of csv files (ref: https://github.com/pandas-dev/pandas/issues/4793)
+
+Result
+
+```
+ISO Code in under5: 196, vaccine: 194, incidence: 194
+194
+```
+
+Therefore, there are data for 194 unique ISO code in the datasets. Next, I checked the intersection of these ISO with the ISO in the topojson.
+
+Output the ISO code from dataset to json file
+
+``` python
+import json
+ISO_File = open("ISO_Code_list.json", "w")
+ISO_File.write(json.dumps(list(common_countries.to_series())))
+ISO_File.close()
+```
+
+Then in JavaScript, I added an array `ISO_list` which stores the ISO code present in the topojson. I amended the following code in the `draw()` function
+
+```Javascript
+areas
+	.enter()
+    .append("path")
+    .attr("class", "area")
+    .attr("id", function(d) {
+        return d.properties.ISO_A3;
+    })
+    .attr("d", path)
+    .each(function(d) {
+        // count the ISO code
+        if (ISO_list.indexOf(d.properties.ISO_A3) === -1) {
+            ISO_list.push(d.properties.ISO_A3)
+        }
+    })
+```
+
+And the with jQuery and underscore.js, I computed the intersection of ISO code from datasets and ISO from topojson
+
+```javascript
+d3.queue()
+    .defer(d3.json, "data/countries.topo.json")
+    .await(function(error, world) {
+        draw(world);
+        $.getJSON("ISO_Code_list.json", function(dataset_ISO_list) {
+            console.log(_.intersection(dataset_ISO_list, ISO_list))
+            alert(_.intersection(dataset_ISO_list, ISO_list))
+        })
+    })
+```
+
+The resulting array contains 183 unique ISO codes. Therefore, these 183 countries/regions will be used in the visualisation.
+
+```
+AFG,ALB,DZA,AND,AGO,ARG,ARM,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BLZ,BEN,BTN,BOL,BWA,BRA,BRN,BGR,BFA,BDI,CPV,KHM,CMR,CAN,CAF,TCD,CHL,CHN,COL,COM,COG,COK,CRI,CIV,HRV,CUB,CYP,CZE,PRK,COD,DNK,DJI,DMA,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FJI,FIN,FRA,GAB,GMB,DEU,GHA,GRC,GRD,GTM,GIN,GNB,GUY,HTI,HND,HUN,ISL,IND,IDN,IRN,IRL,ISR,ITA,JAM,JPN,JOR,KAZ,KEN,KIR,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LTU,LUX,MDG,MWI,MYS,MDV,MLI,MLT,MHL,MRT,MUS,MEX,FSM,MCO,MNG,MNE,MAR,MOZ,MMR,NAM,NRU,NPL,NZL,NIC,NER,NGA,NIU,NOR,OMN,PAK,PLW,PAN,PRY,PER,PHL,POL,QAT,KOR,MDA,ROU,RUS,RWA,KNA,LCA,VCT,WSM,SMR,STP,SAU,SEN,SYC,SLE,SGP,SVK,SVN,SLB,ZAF,SSD,ESP,LKA,SDN,SUR,SWZ,SWE,CHE,SYR,TJK,THA,MKD,TLS,TGO,TON,TTO,TUN,TUR,TKM,TUV,UGA,UKR,ARE,TZA,USA,URY,UZB,VUT,VEN,VNM,YEM,ZMB,ZWE
+```
+
