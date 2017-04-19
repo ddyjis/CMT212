@@ -29,6 +29,7 @@ http://www.tnoda.com/blog/2013-12-07
 1. get 1:10m Cultural Vectors of Countries data from http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-details/
 
 2. install GDAL and Topojson to convert shapefiles to GeoJSON and then to Topojson.
+
    1. GeoJSON and Topojson can be easily passed to Javascript
 
    2. I could also select to exclude Antartica
@@ -190,5 +191,37 @@ under5_filtered = under5_filtered.replace(0.0, np.nan)
 
 Now the data are prepared for d3.js to read
 
+### Visualisation Work
 
+I want to use a colour scale to visualise the mortarity rates. I have to decide between a continuous colour scale and discrete colour scale. This answer https://gis.stackexchange.com/a/86679 in stackexchange gives me a clear guide in choosing between the two. The pros and cons of the two are listed below
+
+#### Continuous Colour Scale (un-classed map)
+
+##### Pros
+
+- Accurate
+
+##### Cons
+
+- Sensitive to outlier
+- Human perception to colour is not linear
+
+#### Discrete Colour Scale (maps with 'bins')
+
+##### Pros
+
+- Robust to outliers
+- Colours can be perceived clearly and distinctly
+
+##### Cons
+
+- Data lost
+
+Therefore, discrete colour scale is employed.
+
+
+
+
+
+materialize is used as the framework
 
