@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="css/materialize.min.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 
@@ -14,14 +15,22 @@
     <div id="slide-out" class="side-nav fixed">
         <div class="container">
             <form>
-                <div class="input-field col s12">
-                    <select name="select_country" id="select_country">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <select name="select_country" id="select_country">
                         <option value="WORLD" selected>World</option>
                     </select>
-                    <label for="select_country">Choose a Country</label>
+                        <label for="select_country">Choose a Country</label>
+                    </div>
                 </div>
-                <div class="range-field">
-                    <input type="range" id="year" min="1980" max="2015" value="2015" />
+                <div class="row">
+                    <label>Choose a Year</label>
+                    <div class="range-field col s10">
+                        <input type="range" name="year" id="year" min="1980" max="2015" value="2015" />
+                    </div>
+                    <div class="col s2">
+                        <i class="fa fa-play-circle-o fa-2x" id="play-btn"></i>
+                    </div>
                 </div>
             </form>
         </div>
@@ -57,7 +66,7 @@
 
         function draw(world, year) {
             var transit = d3.transition()
-                .duration(2000);
+                .duration(1000);
 
             projection
                 .scale(1)
@@ -84,7 +93,7 @@
                 .attr("class", "area");
 
             new_area.merge(areas)
-                .transition(t)
+                .transition(transit)
                 .attr("id", function(d) {
                     return d.properties.ADM0_A3;
                 })
@@ -106,7 +115,7 @@
                     return "0.25"
                 })
                 .attr("stroke", "#d3d3d3")
-                .on("click", clicked);
+                // .on("click", clicked);
 
             // code used to find intersection of countries between dataset and topojson
             // .each(function(d) {
@@ -183,10 +192,33 @@
 
         init();
 
-        d3.select("#year")
-            .on("change", function() {
-                draw(world_topo, this.value)
-            })
+        $("#year").change(function() {
+            draw(world_topo, this.value)
+        });
+
+        $("#play-btn").click(function() {
+            var playing = false;
+            if (!playing) {
+                var interval = d3.interval(function() {
+                    playing = true;
+                    $("#year").val((parseInt($("#year").val()) + 1));
+                    $("#year").trigger("change");
+                    $("#play-btn").removeClass();
+                    $("#play-btn").addClass("fa fa-stop-circle-o fa-2x");
+                    if ($("#year").val() == "2015") {
+                        interval.stop();
+                        playing = false;
+                        $("#play-btn").removeClass();
+                        $("#play-btn").addClass("fa fa-play-circle-o fa-2x");
+                    }
+                }, 1000)
+            } else {
+                interval.stop();
+                playing = false;
+                $("#play-btn").removeClass();
+                $("#play-btn").addClass("fa fa-play-circle-o fa-2x");
+            }
+        })
     </script>
 </body>
 
