@@ -106,55 +106,43 @@ ISO Code in under5: 196, vaccine: 194, incidence: 194
 194
 ```
 
-Therefore, there are data for 194 unique ISO code in the datasets. Next, I checked the intersection of these ISO with the ISO in the topojson.
+Therefore, there are data for 194 unique ISO code in the datasets. As I want to list the countries in a dropdown for people to choose a specific country, I need to compute the intersection of countries in datasets and in the map. Output the ISO list from python
 
-Output the ISO code from dataset to json file
-
-``` python
+```python
 import json
-ISO_File = open("data/Pre-processing/ISO_Code_list.json", "w")
-ISO_File.write(json.dumps(list(common_countries.to_series())))
-ISO_File.close()
+ISO_list_file = open("data/Pre-processing/ISO_list_in_dataset.json", "w")
+ISO_list_file.write(json.dumps(list(common_countries.to_series())))
+ISO_list_file.close()
 ```
 
-Then in JavaScript, I added an array `ISO_list` which stores the ISO code present in the topojson. I amended the following code in the `draw()` function
-
-```Javascript
-areas
-	.enter()
-    .append("path")
-    .attr("class", "area")
-    .attr("id", function(d) {
-        return d.properties.ISO_A3;
-    })
-    .attr("d", path)
-    .each(function(d) {
-        // count the ISO code
-        if (ISO_list.indexOf(d.properties.ISO_A3) === -1) {
-            ISO_list.push(d.properties.ISO_A3)
-        }
-    })
-```
-
-And the with jQuery and underscore.js, I computed the intersection of ISO code from datasets and ISO from topojson
+In the map, `ADM0_A3` is used as the ID of each shape. This is because some of the countries do not have ISO code in the metadata of the shape (UK is divided into England, Wales, Scotland and North Ireland with each shape having no ISO code but they all have the same `ADM0_A3` code `GBR`). I store the `ADM0_A3` code in a list using the following code
 
 ```javascript
+var ISO_List = [];
+
+// in update code
+areas
+	.enter()
+	...
+    .each(function(d) {
+        if (ISO_List.indexOf(d.properties.ADM0_A3) === -1) {
+            ISO_List.push(d.properties.ADM0_A3)
+        }
+    })
+
+// in init()
 d3.queue()
-    .defer(d3.json, "data/countries.topo.json")
-    .await(function(error, world) {
+	...
+    .await(function(error, world, ...){
+        ...
         draw(world);
-        $.getJSON("ISO_Code_list.json", function(dataset_ISO_list) {
-            console.log(_.intersection(dataset_ISO_list, ISO_list))
-            alert(_.intersection(dataset_ISO_list, ISO_list))
-        })
+		$.getJSON("data/Pre-processing/ISO_list_in_dataset.json", function(data) {
+            alert(_.intersection(data, ISO_List))
+		})
     })
 ```
 
-The resulting array contains 183 unique ISO codes. Therefore, these 183 countries/regions will be used in the visualisation.
-
-```
-AFG,ALB,DZA,AND,AGO,ARG,ARM,AUS,AUT,AZE,BHS,BHR,BGD,BRB,BLR,BLZ,BEN,BTN,BOL,BWA,BRA,BRN,BGR,BFA,BDI,CPV,KHM,CMR,CAN,CAF,TCD,CHL,CHN,COL,COM,COG,COK,CRI,CIV,HRV,CUB,CYP,CZE,PRK,COD,DNK,DJI,DMA,DOM,ECU,EGY,SLV,GNQ,ERI,EST,ETH,FJI,FIN,FRA,GAB,GMB,DEU,GHA,GRC,GRD,GTM,GIN,GNB,GUY,HTI,HND,HUN,ISL,IND,IDN,IRN,IRL,ISR,ITA,JAM,JPN,JOR,KAZ,KEN,KIR,KWT,KGZ,LAO,LVA,LBN,LSO,LBR,LBY,LTU,LUX,MDG,MWI,MYS,MDV,MLI,MLT,MHL,MRT,MUS,MEX,FSM,MCO,MNG,MNE,MAR,MOZ,MMR,NAM,NRU,NPL,NZL,NIC,NER,NGA,NIU,NOR,OMN,PAK,PLW,PAN,PRY,PER,PHL,POL,QAT,KOR,MDA,ROU,RUS,RWA,KNA,LCA,VCT,WSM,SMR,STP,SAU,SEN,SYC,SLE,SGP,SVK,SVN,SLB,ZAF,SSD,ESP,LKA,SDN,SUR,SWZ,SWE,CHE,SYR,TJK,THA,MKD,TLS,TGO,TON,TTO,TUN,TUR,TKM,TUV,UGA,UKR,ARE,TZA,USA,URY,UZB,VUT,VEN,VNM,YEM,ZMB,ZWE
-```
+It is found that there are 193 intersection and the result is put back to `ISO_List` for displaying country list.
 
 Next, convertion of ISO code to country names
 

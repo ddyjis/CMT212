@@ -5,40 +5,67 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+    <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/materialize.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="slide-out" class="side-nav fixed">
+        <div class="container">
+            <form>
+                <div class="input-field col s12">
+                    <select name="select_country" id="select_country">
+                        <option value="WORLD" selected>World</option>
+                    </select>
+                    <label for="select_country">Choose a Country</label>
+                </div>
+                <div class="range-field">
+                    <input type="range" id="year" min="1980" max="2015" value="2015" />
+                </div>
+            </form>
+        </div>
+    </div>
+    <a href="#" data-activates="slide-out" class="button-collapse"><i class="material-icons">menu</i></a>
+
+    <div class="main">
+        <div id="world_map"></div>
+    </div>
     <script src="js/d3.v4.js"></script>
     <script src="js/topojson.js"></script>
     <script src="js/jquery-3.2.1.js"></script>
     <script src="js/underscore.js"></script>
     <script src="js/colorbrewer.v1.js"></script>
-    <script type="text/javascript" src="js/materialize.min.js"></script>
-</head>
-
-<body>
-    <div id="world_map"></div>
+    <script src="js/materialize.min.js"></script>
     <script>
         var svg, g;
         var projection, path;
-        var width, height;
+        var map_width, map_height;
         var ISO2Name, Name2ISO;
         var under5_data, vaccine_data, incidence_data;
+        var world_topo;
+
+        var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
         var under5_colour_scale = d3.scaleQuantize()
             .range(colorbrewer.Reds[5])
             .domain([0, 500]);
 
-        // code used to find the intersection of ISO codes across datasets and topojson
-        // var ISO_list = [];
+        function clicked(d) {
+            alert(d.properties.ADM0_A3)
+        }
 
-        function draw(world) {
+        function draw(world, year) {
+            var transit = d3.transition()
+                .duration(2000);
+
             projection
                 .scale(1)
                 .translate([0, 0]);
 
             var b = path.bounds(topojson.feature(world, world.objects.countries));
-            var s = 0.95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / (height));
-            var t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+            var s = 0.95 / Math.max((b[1][0] - b[0][0]) / map_width, (b[1][1] - b[0][1]) / map_height);
+            var t = [(map_width - s * (b[1][0] + b[0][0])) / 2, (map_height - s * (b[1][1] + b[0][1])) / 2];
 
             projection
                 .scale(s)
@@ -48,58 +75,89 @@
                 .data(topojson.feature(world, world.objects.countries).features);
 
             areas
+                .exit()
+                .remove();
+
+            var new_area = areas
                 .enter()
                 .append("path")
-                .attr("class", "area")
+                .attr("class", "area");
+
+            new_area.merge(areas)
+                .transition(t)
                 .attr("id", function(d) {
-                    return d.properties.ISO_A3;
+                    return d.properties.ADM0_A3;
                 })
                 .attr("d", path)
-                // code used to find the intersection of ISO codes across datasets and topojson
-                // .each(function(d) {
-                //     // count the ISO code
-                //     if (ISO_list.indexOf(d.properties.ISO_A3) === -1) {
-                //         ISO_list.push(d.properties.ISO_A3)
-                //     }
-                // })
                 .attr("fill", function(d) {
                     for (var i = 0; i < under5_data.length; i++) {
-                        if (under5_data[i]["ISO Code"] === d.properties.ISO_A3) {
-                            return under5_colour_scale(under5_data[i]["2015"])
+                        if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3) {
+                            return under5_colour_scale(under5_data[i][year])
                         }
                     }
                     return "#FFFFFF"
                 })
                 .attr("fill-opacity", function(d) {
                     for (var i = 0; i < under5_data.length; i++) {
-                        if (under5_data[i]["ISO Code"] === d.properties.ISO_A3) {
+                        if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3) {
                             return "1.0"
                         }
                     }
-                    return "0.5"
+                    return "0.25"
                 })
+                .attr("stroke", "#d3d3d3")
+                .on("click", clicked);
+
+            // code used to find intersection of countries between dataset and topojson
+            // .each(function(d) {
+            //     if (ISO_List.indexOf(d.properties.ADM0_A3) === -1) {
+            //         ISO_List.push(d.properties.ADM0_A3)
+            //     }
+            // })
+        }
+
+        function load_data(ISO2NameData, under5Data, vaccineData, incidenceData) {
+            ISO2Name = ISO2NameData;
+            Name2ISO = _.invert(ISO2Name);
+            under5_data = under5Data;
+            vaccine_data = vaccineData;
+            incidence_data = incidenceData;
+
+            d3.select("#select_country")
+                .selectAll("option")
+                .data(ISO_List)
+                .enter()
+                .append("option")
+                .attr("value", function(d) {
+                    return d
+                })
+                .text(function(d) {
+                    return ISO2Name[d]
+                });
+
+            $('select').material_select();
         }
 
         function init() {
-            width = $(window).width();
-            height = $(window).height();
+            map_width = $(".main").width();
+            map_height = map_width / 2.5;
 
             svg = d3.select("#world_map")
                 .append("svg")
-                .attr("width", width)
-                .attr("height", height);
+                .attr("width", map_width)
+                .attr("height", map_height);
 
             g = svg.append("g");
 
             g.append("rect")
-                .attr("width", width)
-                .attr("height", height)
+                .attr("width", map_width)
+                .attr("height", map_height)
                 .attr("fill", "lightgray");
 
             // according to https://www.wikiwand.com/en/List_of_countries_by_easternmost_point,
             // most eastern part of the world is Russia at 169.40 W
             projection = d3.geoEquirectangular()
-                .rotate([-10.6, 0]); // rotate a little for displaying Russia in a whole piece
+                .rotate([-10.5, 0]); // rotate a little for displaying Russia in a whole piece
 
 
             path = d3.geoPath()
@@ -111,24 +169,24 @@
                 .defer(d3.csv, "data/under5.csv")
                 .defer(d3.csv, "data/vaccine.csv")
                 .defer(d3.csv, "data/incidence.csv")
-                .await(function(error, world, ISO2Name_data, under5Data, vaccineData, incidenceData) {
-                    // code used to find the intersection of ISO codes across datasets and topojson
-                    // $.getJSON("ISO_Code_list.json", function(dataset_ISO_list) {
-                    //     final_ISO = _.intersection(dataset_ISO_list, ISO_list);
-                    //     console.log(final_ISO);
-                    //     alert(final_ISO);
+                .await(function(error, world, ISO2NameData, under5Data, vaccineData, incidenceData) {
+                    load_data(ISO2NameData, under5Data, vaccineData, incidenceData);
+                    world_topo = world
+                    draw(world_topo, "2015");
+
+                    // code used to find intersection of countries in dataset and topojson
+                    // $.getJSON("data/Pre-processing/ISO_list_in_dataset.json", function(data) {
+                    //     alert(_.intersection(data, ISO_List))
                     // })
-                    ISO2Name = ISO2Name_data;
-                    Name2ISO = _.invert(ISO2Name);
-                    under5_data = under5Data;
-                    vaccine_data = vaccineData;
-                    incidence_data = incidenceData;
-                    console.log(under5_data)
-                    draw(world);
                 })
         }
 
         init();
+
+        d3.select("#year")
+            .on("change", function() {
+                draw(world_topo, this.value)
+            })
     </script>
 </body>
 
