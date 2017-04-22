@@ -1,9 +1,33 @@
 .main {
-    padding-left: 300px;
+    padding-left: 250px;
+    padding-right: 250px;
 }
 
-@media only screen and (max-width: 992px) {
-    .main {
-        padding-left: 0;
-    }
+.loading-screen {
+    z-index: 9999;
+    position: fixed;
+}
+
+.navbar-fixed {
+    z-index: 1000;
+}
+
+.settings-container,
+.information-container {
+    padding-top: 64px;
+}
+
+.side-nav {
+    width: 250px;
+}
+
+.side-nav>.container {
+    margin-left: 25px;
+    margin-right: 25px;
+    width: 200px;
+}
+
+.side-nav.fixed.right {
+    right: 0px;
+    left: auto;
 }

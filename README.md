@@ -207,6 +207,28 @@ I want to use a colour scale to visualise the mortarity rates. I have to decide 
 
 Therefore, discrete colour scale is employed.
 
+Plot the histogram of the value of data
+
+```python
+import matplotlib
+import matplotlib.pyplot as plt
+%matplotlib inline
+matplotlib.style.use('ggplot')
+under5_filtered.plot.hist()
+```
+
+![](http://ww4.sinaimg.cn/large/006tNbRwgy1fevpq42771j30as071dgf.jpg)
+
+A majority of the lies between 0 - 50 interval and the code
+
+```python
+under5.max(numeric_only=True).max()
+```
+
+the maximum value of the whole dataset is 443.5.
+
+In order to compare data across different years
+
 
 
 
