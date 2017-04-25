@@ -20,7 +20,7 @@ The objective of the visualisation in to investigate the effectiveness of vaccin
 
 To make the whole visulaisation easy to follow, only one dataset is shown on a map while the other two will be shown using line charts.
 
-## Creating the map
+## First attemp in Creating the map
 
 http://www.tnoda.com/blog/2013-12-07
 
@@ -179,29 +179,35 @@ under5_filtered = under5_filtered.replace(0.0, np.nan)
 
 Now the data are prepared for d3.js to read
 
-### Visualisation Work
+
+
+Time series, missing data. Interpolate
+
+
+
+## Visualisation Work
 
 I want to use a colour scale to visualise the mortarity rates. I have to decide between a continuous colour scale and discrete colour scale. This answer https://gis.stackexchange.com/a/86679 in stackexchange gives me a clear guide in choosing between the two. The pros and cons of the two are listed below
 
-#### Continuous Colour Scale (un-classed map)
+### Continuous Colour Scale (un-classed map)
 
-##### Pros
+#### Pros
 
 - Accurate
 
-##### Cons
+#### Cons
 
 - Sensitive to outlier
 - Human perception to colour is not linear
 
-#### Discrete Colour Scale (maps with 'bins')
+### Discrete Colour Scale (maps with 'bins')
 
-##### Pros
+#### Pros
 
 - Robust to outliers
 - Colours can be perceived clearly and distinctly
 
-##### Cons
+#### Cons
 
 - Data lost
 
@@ -227,11 +233,18 @@ under5.max(numeric_only=True).max()
 
 the maximum value of the whole dataset is 443.5.
 
-In order to compare data across different years
+In order to compare data across different years, I used a consistent colour scale throughout the time period. 
+
+After passing the data using D3.js, I got the choropleth map for 2015 mortarity rate as follow
+
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1fewu5tsu4cj30q20acmyh.jpg)
 
 
 
 
 
-materialize is used as the framework
+MaterializeCSS is used as the webpage framework
 
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1fexy6xcayjj31400kb0v3.jpg)
+
+Prototype of the visualisation with MaterializeCSS. Left hand side is the setting panel and allow user to select country to display and on the right  hand side the details of the country selected. The map is in the central panel and the blank space below the map is planned to show the vaccination rate across the year. I planned to show everything in the screen without scrolling. However, I find it impractical as the map dimensions are in fixed ratio and hence only certain width:height ratio of the browser window can show the remaining graph clearly

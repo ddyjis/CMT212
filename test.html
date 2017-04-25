@@ -28,26 +28,24 @@
         </nav>
     </div>
 
-    <!--left side bar begin-->
-    <div class="side-nav fixed">
-        <div class="container settings-container">
-            <h5><i class="fa fa-cog"></i> Settings</h5>
-            <form>
-
-                <div class="row">
-                    <div class="input-field col s12">
-                        <select name="select-country" id="select-country">
-                            <option value="WORLD" selected>World</option>
-                        </select>
-                        <label for="select-country">Choose a Country</label>
-                    </div>
+    <!--content-->
+    <br />
+    <div class="container">
+        <!--settings-->
+        <form>
+            <div class="row">
+                <div class="input-field col s12 m6 l4 offset-l4">
+                    <select name="select-country" id="select-country">
+                        <option value="WORLD" selected>World</option>
+                    </select>
+                    <label for="select-country">Country</label>
                 </div>
-
-                <div class="row">
-                    <div class="col s12">
-                        <label>Choose a Year</label>
-
-                        <div class="range-field col s10 no-padding">
+            </div>
+            <div class="row">
+                <div class="col s12 m6 l4 offset-l4">
+                    <label>Year</label>
+                    <div class="row">
+                        <div class="range-field col s10">
                             <input type="range" name="year" id="year" min="1950" max="2015" value="2015" />
                         </div>
                         <div class="col s2">
@@ -55,22 +53,41 @@
                         </div>
                     </div>
                 </div>
-
-            </form>
+            </div>
+        </form>
+        <div class="main">
+            <div id="world_map"></div>
         </div>
     </div>
 
+    <!--left side bar begin-->
+    <!--<div class="side-nav fixed">
+        <div class="container settings-container">
+            <h5><i class="fa fa-cog"></i> Settings</h5>
+            <form>
+
+                <div class="row">
+                    <div class="input-field col s12">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col s12">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>-->
+
     <!--right side bar begin-->
-    <div class="side-nav fixed right">
+    <!--<div class="side-nav fixed right">
         <div class="container information-container">
             <h5 id="country-name">World</h5>
             <p id="country-median"></p>
         </div>
-    </div>
+    </div>-->
 
-    <div class="main">
-        <div id="world_map"></div>
-    </div>
     <script src="js/d3.v4.js"></script>
     <script src="js/topojson.js"></script>
     <script src="js/jquery-3.2.1.js"></script>
@@ -93,6 +110,8 @@
 
         var selected_country = "WORLD";
         var selected_year = "2015";
+
+        var tooltip;
 
         var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
@@ -118,6 +137,22 @@
             } else {
                 $("#country-name").html(ISO2Name[selected_country])
             }
+        }
+
+        function update_tooltip(d) {
+            tooltip
+                .style("opacity", "0.9")
+            tooltip
+                .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            return "Median: " + under5_data[i][selected_year]
+                        }
+                    }
+                    return "No data"
+                } + "</p>")
+                .style("left", (d3.event.pageX + 10) + "px")
+                .style("top", (d3.event.pageY + 10) + "px")
         }
 
         function draw(world) {
@@ -156,7 +191,40 @@
                     $("#select-country").val(selected_country);
                     $("select").material_select(); // update the select in materialcss
                     update_info()
-                });
+                })
+                .attr("stroke", "#d3d3d3")
+                .on("mouseover", function(d) {
+                    var output_text = "<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>";
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            return "Median: " + under5_data[i][selected_year]
+                        }
+                    }
+
+                    tooltip
+                        .style("opacity", "0.9")
+                    tooltip
+                        .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
+                            return "No data"
+                        } + "</p>")
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mousemove", function(d) {
+                    tooltip
+                        .style("opacity", "0.9")
+                    tooltip
+                        .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
+                            for (var i = 0; i < under5_data.length; i++) {
+                                if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                                    return "Median: " + under5_data[i][selected_year]
+                                }
+                            }
+                            return "No data"
+                        } + "</p>")
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
 
             new_area.merge(areas)
                 .transition(transit)
@@ -180,7 +248,6 @@
                     }
                     return "0.50"
                 })
-                .attr("stroke", "#d3d3d3")
 
             // code used to find intersection of countries between dataset and topojson
             // .each(function(d) {
@@ -205,7 +272,7 @@
                 .data(ISO_List)
                 .enter()
                 .append("option")
-                .attr("value", function(d) {
+                .attr("id", function(d) {
                     return d
                 })
                 .text(function(d) {
@@ -259,7 +326,8 @@
                 .append("rect")
                 .attr("width", map_width)
                 .attr("height", map_height)
-                .attr("fill", "#b0bec5")
+                // .attr("fill", "#b0bec5")
+                .attr("fill", "#ffffff")
                 .on("click", function(d) {
                     selected_country = "WORLD"
                     $("#select-country").val(selected_country);
@@ -311,7 +379,7 @@
                 .attr("y", function(d, i) {
                     return map_height - (colours.length + 1 - i) * 16 + 3;
                 })
-                .attr("font-family", "Roboto, San Serif")
+                .attr("font-family", "Roboto, Sans Serif")
                 .text(function(d, i) {
                     if (i == 0) {
                         return "No Data"
@@ -319,6 +387,20 @@
                         return ((i - 1) * 50) + " - " + (i * 50)
                     }
                 })
+
+            g.select("#year-label")
+                .append("text")
+                .attr("x", "15")
+                .attr("y", "24")
+                .attr("id", "year-label")
+                .attr("font-family", "Roboto, Sans Serif")
+                .attr("font-size", "18px")
+                .text("2015");
+
+            tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", "0");
 
             d3.queue()
                 .defer(d3.json, "data/countries.topo.json")
@@ -344,12 +426,14 @@
         // when the year is changed, update the map
         $("#year").change(function() {
             selected_year = this.value;
+            $("#year-label").html(selected_year);
             draw(world_topo);
             update_info()
         });
 
         $("#select-country").change(function() {
             selected_country = $("#select-country option:selected").attr("id");
+            update_info();
         })
 
         // play button
