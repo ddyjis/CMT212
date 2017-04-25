@@ -195,33 +195,41 @@
                 .attr("stroke", "#d3d3d3")
                 .on("mouseover", function(d) {
                     var output_text = "<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>";
+                    var found = false
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
-                            return "Median: " + under5_data[i][selected_year]
+                            output_text = output_text + "Median: " + under5_data[i][selected_year] + "</p>"
+                            found = true
                         }
+                    }
+                    if (!found) {
+                        output_text = output_text + "No data</p>"
                     }
 
                     tooltip
                         .style("opacity", "0.9")
                     tooltip
-                        .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
-                            return "No data"
-                        } + "</p>")
+                        .html(output_text)
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY + 10) + "px")
                 })
                 .on("mousemove", function(d) {
+                    var output_text = "<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>";
+                    var found = false
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            output_text = output_text + "Median: " + under5_data[i][selected_year] + "</p>"
+                            found = true
+                        }
+                    }
+                    if (!found) {
+                        output_text = output_text + "No data</p>"
+                    }
+
                     tooltip
                         .style("opacity", "0.9")
                     tooltip
-                        .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
-                            for (var i = 0; i < under5_data.length; i++) {
-                                if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
-                                    return "Median: " + under5_data[i][selected_year]
-                                }
-                            }
-                            return "No data"
-                        } + "</p>")
+                        .html(output_text)
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY + 10) + "px")
                 })
