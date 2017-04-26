@@ -5,26 +5,158 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="js/d3.v4.js"></script>
-    <script src="js/topojson.js"></script>
-    <script src="js/jquery-3.2.1.js"></script>
+    <link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/materialize.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 </head>
 
 <body>
-    <div id="world_map"></div>
+    <!--loading screen begin-->
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="loading-screen">
+        <filter id="blur">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
+        </filter>
+    </svg>
+    <!--loading screen end-->
+
+    <div class="navbar-fixed">
+        <nav>
+            <div class="nav-wrapper red lighten-2">
+                <a href="#" class="brand-logo center">Vaccination and Chlid Mortarity</a>
+            </div>
+        </nav>
+    </div>
+
+    <!--content-->
+    <br />
+    <div class="container">
+        <!--settings-->
+        <form>
+            <div class="row">
+                <div class="input-field col s12 m6 l4 offset-l4">
+                    <select name="select-country" id="select-country">
+                        <option value="WORLD" selected>World</option>
+                    </select>
+                    <label for="select-country">Country</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 m6 l4 offset-l4">
+                    <label>Year</label>
+                    <div class="row">
+                        <div class="range-field col s10">
+                            <input type="range" name="year" id="year" min="1950" max="2015" value="2015" />
+                        </div>
+                        <div class="col s2">
+                            <span class="red-text text-lighten-2"><i class="fa fa-play-circle-o fa-2x" id="play-btn"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="main">
+            <div id="world_map"></div>
+        </div>
+    </div>
+
+    <!--left side bar begin-->
+    <!--<div class="side-nav fixed">
+        <div class="container settings-container">
+            <h5><i class="fa fa-cog"></i> Settings</h5>
+            <form>
+
+                <div class="row">
+                    <div class="input-field col s12">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col s12">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>-->
+
+    <!--right side bar begin-->
+    <!--<div class="side-nav fixed right">
+        <div class="container information-container">
+            <h5 id="country-name">World</h5>
+            <p id="country-median"></p>
+        </div>
+    </div>-->
+
+    <script src="js/d3.v4.js"></script>
+    <script src="js/topojson.js"></script>
+    <script src="js/jquery-3.2.1.js"></script>
+    <script src="js/underscore.js"></script>
+    <script src="js/colorbrewer.v1.js"></script>
+    <script src="js/materialize.js"></script>
     <script>
         var svg, g;
         var projection, path;
-        var width, height;
+        var map_width, map_height;
+
+        var ISO2Name, Name2ISO;
+        var under5_data, vaccine_data, incidence_data;
+        var world_topo;
+
+        var loading_screen;
+        var window_width, window_height;
+
+        var active = d3.select(null);
+
+        var selected_country = "WORLD";
+        var selected_year = "2015";
+
+        var tooltip;
+
+        var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
+
+        var colours = colorbrewer.Reds[9];
+
+        var under5_colour_scale = d3.scaleQuantize()
+            .range(colours)
+            .domain([0, 500]);
+
+        function update_info() {
+
+            if (selected_country == "WORLD") {
+                $("#country-name").html("World")
+            } else {
+                $("#country-name").html(ISO2Name[selected_country])
+            }
+        }
+
+        function update_tooltip(d) {
+            tooltip
+                .style("opacity", "0.9")
+            tooltip
+                .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            return "Median: " + under5_data[i][selected_year]
+                        }
+                    }
+                    return "No data"
+                } + "</p>")
+                .style("left", (d3.event.pageX + 10) + "px")
+                .style("top", (d3.event.pageY + 10) + "px")
+        }
 
         function draw(world) {
+            var transit = d3.transition()
+                .duration(1000);
+
             projection
                 .scale(1)
                 .translate([0, 0]);
 
             var b = path.bounds(topojson.feature(world, world.objects.countries));
-            var s = 0.95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height);
-            var t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+            var s = 0.95 / Math.max((b[1][0] - b[0][0]) / map_width, (b[1][1] - b[0][1]) / map_height);
+            var t = [(map_width - s * (b[1][0] + b[0][0])) / 2, (map_height - s * (b[1][1] + b[0][1])) / 2];
 
             projection
                 .scale(s)
@@ -34,38 +166,300 @@
                 .data(topojson.feature(world, world.objects.countries).features);
 
             areas
+                .exit()
+                .remove();
+
+            var new_area = areas
                 .enter()
                 .append("path")
                 .attr("class", "area")
-                .attr("d", path);
+                .on("click", function(d) {
+                    if (ISO_List.indexOf(d.properties.ADM0_A3) == -1) {
+                        selected_country = "WORLD"
+                    } else {
+                        selected_country = d.properties.ADM0_A3;
+                    }
+                    $("#select-country").val(selected_country);
+                    $("select").material_select(); // update the select in materialcss
+                    update_info()
+                })
+                .attr("stroke", "#d3d3d3")
+                .on("mouseover", function(d) {
+                    var output_text = "<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>";
+                    var found = false
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            output_text = output_text + "Median: " + under5_data[i][selected_year] + "</p>"
+                            found = true
+                        }
+                    }
+                    if (!found) {
+                        output_text = output_text + "No data</p>"
+                    }
 
+                    tooltip
+                        .style("opacity", "0.9")
+                    tooltip
+                        .html(output_text)
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mousemove", function(d) {
+                    var output_text = "<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>";
+                    var found = false
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
+                            output_text = output_text + "Median: " + under5_data[i][selected_year] + "</p>"
+                            found = true
+                        }
+                    }
+                    if (!found) {
+                        output_text = output_text + "No data</p>"
+                    }
+
+                    tooltip
+                        .style("opacity", "0.9")
+                    tooltip
+                        .html(output_text)
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+
+            new_area.merge(areas)
+                .transition(transit)
+                .attr("id", function(d) {
+                    return d.properties.ADM0_A3;
+                })
+                .attr("d", path)
+                .attr("fill", function(d) {
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
+                            return under5_colour_scale(+under5_data[i][selected_year])
+                        }
+                    }
+                    return "#FFFFFF"
+                })
+                .attr("fill-opacity", function(d) {
+                    for (var i = 0; i < under5_data.length; i++) {
+                        if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
+                            return "1.0"
+                        }
+                    }
+                    return "0.50"
+                })
+
+            // code used to find intersection of countries between dataset and topojson
+            // .each(function(d) {
+            //     if (ISO_List.indexOf(d.properties.ADM0_A3) === -1) {
+            //         ISO_List.push(d.properties.ADM0_A3)
+            //     }
+            // })
+
+            update_info()
+        }
+
+        function load_data(ISO2NameData, under5Data, vaccineData, incidenceData) {
+            ISO2Name = ISO2NameData;
+            Name2ISO = _.invert(ISO2Name);
+            under5_data = under5Data;
+            vaccine_data = vaccineData;
+            incidence_data = incidenceData;
+
+            // update the country selection dropdown
+            d3.select("#select-country")
+                .selectAll("option")
+                .data(ISO_List)
+                .enter()
+                .append("option")
+                .attr("id", function(d) {
+                    return d
+                })
+                .text(function(d) {
+                    return ISO2Name[d]
+                });
+            // initialise selection dropdown for materialcss
+            $('select').material_select();
         }
 
         function init() {
-            width = $(window).width();
-            height = $(window).height();
+            map_width = $(".main").width();
+            map_height = map_width / 2.5; // keep the ratio
 
+            window_width = $(window).width();
+            window_height = $(window).height();
+
+            // setting the loading screen
+            loading_screen = d3.select(".loading-screen")
+                .attr("width", window_width)
+                .attr("height", window_height);
+
+            loading_screen
+                .append("rect")
+                .attr("width", window_width * 1.2)
+                .attr("height", window_height * 1.2)
+                .attr("x", -window_width * 0.1)
+                .attr("y", -window_height * 0.1)
+                .attr("fill", "white")
+                .attr("fill-opacity", "0.9")
+                .attr("filter", "url(#blur)");
+
+            loading_screen
+                .append("text")
+                .attr("text-anchor", "middle")
+                .attr("alignment-baseline", "center")
+                .attr("font-size", "36px")
+                .attr("x", window_width / 2)
+                .attr("y", window_height / 2)
+                .text("Loading...");
+
+            // map
             svg = d3.select("#world_map")
                 .append("svg")
-                .attr("width", width)
-                .attr("height", height);
+                .attr("width", map_width)
+                .attr("height", map_height);
 
-            g = svg.append("g");
+            g = svg
+                .append("g");
 
-            projection = d3.geoMercator()
-                .rotate([0, 0]);
+            g
+                .append("rect")
+                .attr("width", map_width)
+                .attr("height", map_height)
+                // .attr("fill", "#b0bec5")
+                .attr("fill", "#ffffff")
+                .on("click", function(d) {
+                    selected_country = "WORLD"
+                    $("#select-country").val(selected_country);
+                    $("select").material_select(); // update the select in materialcss
+                    update_info()
+                });
+
+            // according to https://www.wikiwand.com/en/List_of_countries_by_easternmost_point,
+            // most eastern part of the world is Russia at 169.40 W
+            projection = d3.geoEquirectangular()
+                .rotate([-10.5, 0]); // rotate a little for displaying Russia in a whole piece
 
             path = d3.geoPath()
                 .projection(projection);
 
+            // legend
+            var legend = g.selectAll(".legend")
+                .data(["#ffffff"].concat(colours));
+
+            var new_legend = legend
+                .enter()
+                .append("g")
+                .attr("class", "legend")
+
+            new_legend.merge(legend)
+                .append("rect")
+                .attr("width", "15")
+                .attr("height", "15")
+                .attr("x", "15")
+                .attr("y", function(d, i) {
+                    return map_height - (colours.length + 1 - i) * 16 - 10;
+                })
+                .attr("fill", function(d) {
+                    return d
+                })
+                .attr("fill-opacity", function(d, i) {
+                    if (i == 0) {
+                        return "0.5"
+                    } else {
+                        return "1.0"
+                    }
+                })
+                .attr("stroke", "black")
+                .attr("stroke-width", "1px")
+
+            new_legend.merge(legend)
+                .append("text")
+                .attr("x", "36")
+                .attr("y", function(d, i) {
+                    return map_height - (colours.length + 1 - i) * 16 + 3;
+                })
+                .attr("font-family", "Roboto, Sans Serif")
+                .text(function(d, i) {
+                    if (i == 0) {
+                        return "No Data"
+                    } else {
+                        return ((i - 1) * 50) + " - " + (i * 50)
+                    }
+                })
+
+            g.select("#year-label")
+                .append("text")
+                .attr("x", "15")
+                .attr("y", "24")
+                .attr("id", "year-label")
+                .attr("font-family", "Roboto, Sans Serif")
+                .attr("font-size", "18px")
+                .text("2015");
+
+            tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", "0");
+
             d3.queue()
                 .defer(d3.json, "data/countries.topo.json")
-                .await(function(error, world) {
-                    draw(world)
+                .defer(d3.json, "data/ISO2Name.json")
+                .defer(d3.csv, "data/under5.csv")
+                .defer(d3.csv, "data/vaccine.csv")
+                .defer(d3.csv, "data/incidence.csv")
+                .await(function(error, world, ISO2NameData, under5Data, vaccineData, incidenceData) {
+                    load_data(ISO2NameData, under5Data, vaccineData, incidenceData);
+                    world_topo = world;
+                    draw(world_topo);
+                    loading_screen.remove();
+
+                    // code used to find intersection of countries in dataset and topojson
+                    // $.getJSON("data/Pre-processing/ISO_list_in_dataset.json", function(data) {
+                    //     alert(_.intersection(data, ISO_List))
+                    // })
                 })
         }
 
         init();
+
+        // when the year is changed, update the map
+        $("#year").change(function() {
+            selected_year = this.value;
+            $("#year-label").html(selected_year);
+            draw(world_topo);
+            update_info()
+        });
+
+        $("#select-country").change(function() {
+            selected_country = $("#select-country option:selected").attr("id");
+            update_info();
+        })
+
+        // play button
+        var playing = false;
+        var interval;
+        $("#play-btn").click(function() {
+            if (playing == false) {
+                playing = true;
+                $("#play-btn").removeClass();
+                $("#play-btn").addClass("fa fa-stop-circle-o fa-2x");
+                interval = d3.interval(function() {
+                    $("#year").val((Math.min(2015, parseInt($("#year").val()) + 1)));
+                    $("#year").trigger("change");
+                    if ($("#year").val() == "2015") {
+                        interval.stop();
+                        playing = false;
+                        $("#play-btn").removeClass();
+                        $("#play-btn").addClass("fa fa-play-circle-o fa-2x");
+                    }
+                }, 1000)
+            } else {
+                interval.stop();
+                playing = false;
+                $("#play-btn").removeClass();
+                $("#play-btn").addClass("fa fa-play-circle-o fa-2x");
+            }
+        })
     </script>
 </body>
 

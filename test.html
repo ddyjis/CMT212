@@ -122,15 +122,6 @@
             .domain([0, 500]);
 
         function update_info() {
-            d3.select("#country-median")
-                .text(function() {
-                    for (var i = 0; i < under5_data.length; i++) {
-                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
-                            return "Median: " + under5_data[i][selected_year]
-                        }
-                    }
-                    return "No data"
-                })
 
             if (selected_country == "WORLD") {
                 $("#country-name").html("World")

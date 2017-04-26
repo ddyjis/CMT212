@@ -183,6 +183,16 @@ Now the data are prepared for d3.js to read
 
 Time series, missing data. Interpolate
 
+vaccine data from 1980
+
+Stationary test for under5 for each country
+
+Stationary test for each vaccine in each country
+
+![](http://ww3.sinaimg.cn/large/006tNbRwgy1fezels9n3gj31400fzq4x.jpg)
+
+The map show the countries with trends in under5 and vaccine
+
 
 
 ## Visualisation Work
