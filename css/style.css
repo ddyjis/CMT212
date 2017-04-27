@@ -10,7 +10,7 @@
 .tooltip {
     position: absolute;
     text-align: left;
-    padding: 2px;
+    padding: 10px;
     background: lightsteelblue;
     border: 1px;
 }
