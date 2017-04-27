@@ -32,7 +32,7 @@
     <br />
     <div class="container">
         <!--settings-->
-        <form>
+        <form class="map_form">
             <div class="row">
                 <div class="input-field col s12 m6 l4 offset-l4">
                     <select name="select-country" id="select-country">
@@ -55,10 +55,13 @@
                 </div>
             </div>
         </form>
-        <div class="main">
-            <h3 class="center-align">Under 5 Mortarity Rates</h3>
-            <div id="world_map"></div>
-        </div>
+        <h3 class="center-align">Under 5 Mortarity Rates</h3>
+        <div id="world_map"></div>
+        <form class="vaccine vaccine_form">
+
+        </form>
+        <h3 class="vaccine center-align">Vaccination Coverate</h3>
+        <div class="vaccine" id="vaccine_chart"></div>
     </div>
 
     <script src="js/d3.v4.js"></script>
@@ -144,6 +147,7 @@
                         selected_country = d.properties.ADM0_A3;
                     }
                     $("#select-country").val(selected_country);
+                    $("#select-country").trigger("change")
                     $("select").material_select(); // update the select in materialcss
                 })
                 .attr("stroke", "#d3d3d3")
@@ -235,7 +239,7 @@
                 .data(ISO_List)
                 .enter()
                 .append("option")
-                .attr("id", function(d) {
+                .attr("value", function(d) {
                     return d
                 })
                 .text(function(d) {
@@ -246,7 +250,7 @@
         }
 
         function init() {
-            map_width = $(".main").width();
+            map_width = $("#world_map").width();
             map_height = map_width / 2.5; // keep the ratio
 
             window_width = $(window).width();
@@ -364,6 +368,8 @@
                 .attr("class", "tooltip")
                 .style("opacity", "0");
 
+            $(".vaccine").hide();
+
             d3.queue()
                 .defer(d3.json, "data/countries.topo.json")
                 .defer(d3.json, "data/ISO2Name.json")
@@ -392,7 +398,13 @@
         });
 
         $("#select-country").change(function() {
-            selected_country = $("#select-country option:selected").attr("id");
+            selected_country = $("#select-country option:selected").val();
+            alert(selected_country)
+            if (selected_country == "WORLD") {
+                $(".vaccine").hide();
+            } else {
+                $(".vaccine").show();
+            }
         })
 
         // play button
