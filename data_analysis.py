@@ -11,14 +11,14 @@ pp = pprint.PrettyPrinter(indent=4)
 under5 = pd.read_csv("data/under5.csv")
 vaccine = pd.read_csv("data/vaccine.csv")
 
-under5 = under5.iloc[:, 1:].set_index("ISO Code")
-vaccine = vaccine.iloc[:, 1:].set_index(["ISO_code", "Vaccine"]).sort_index(level="ISO_code")
+under5 = under5.set_index("ISO Code")
+vaccine = vaccine.set_index(["ISO_code", "Vaccine"]).sort_index(level="ISO_code")
 
-under5 = under5.apply(pd.to_numeric, errors="ignore").ix[:, 2:].apply(lambda x: x/1000)
-
-# select only data from 1980 to 2015
-under5_filtered = under5.iloc[:, [0] + list(range(32,68))]
-vaccine_filtered = vaccine.iloc[:, [0] + list(range(37, 1, -1))]
+# select only data from 1980 to 2015 and reverse of order of vaccine 
+# in accending order of year
+under5 = under5.iloc[:, list(range(30,66))]
+vaccine = vaccine.iloc[:, list(range(35, -1, -1))]
+vaccine = vaccine[vaccine.columns[::-1]]
 
 # function for testing time series stationarity using Augmented Dickey-Fuller Test
 # it takes in a time series and significant level as parameters
@@ -40,12 +40,12 @@ def test_stationarity(timeseries, sig=0.05):
 
 # test for stationary of under5 for each country
 under5_sig = []
-for c in under5_filtered.index:
-    # extract one record from under5_filtered and convert the data to numeric 
+for c in under5.index:
+    # extract one record from under5 and convert the data to numeric 
     # and then interpolate the missing values in between the data
     # and then remove nan data at the beginning of the time series
     # this is to prepare the data for the Augmented Dickey-Fuller Test
-    data = under5_filtered.ix[c][1:].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
+    data = under5.ix[c].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
     have_trend = False
     # only country with enough record are tested, others are assumed stationary
     if len(data) > 9:
@@ -60,10 +60,10 @@ input("")
 
 # test for stationary of each vaccine in each country
 vaccine_sig = {}
-for c, v in vaccine_filtered.index:
-    # the structure for vaccine_filtered is different as it has 2 indice so the 
+for c, v in vaccine.index:
+    # the structure for vaccine is different as it has 2 indice so the 
     # syntax here is a little bit different
-    data = vaccine_filtered.ix[c].ix[v][1:].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
+    data = vaccine.ix[c].ix[v].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
     have_trend = False
     if len(data) > 9:
         have_trend = test_stationarity(sum(data.values.tolist(), []), 0.05)
@@ -85,17 +85,17 @@ def detrend(x, y):
     return [y[i] - trend[i] for i in range(len(y))]
 
 # check if the two data ISO code are inconsistent
-for c, v in vaccine_filtered.index:
-    if c not in under5_filtered.index:
+for c, v in vaccine.index:
+    if c not in under5.index:
         print(c)
 
 # check granger causality
 vaccine_granger_cause = []
 
-for c, v in vaccine_filtered.index:
+for c, v in vaccine.index:
     # get data the way same as above, u for under5 and v for vaccine
-    v_data = vaccine_filtered.ix[c].ix[v][1:].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
-    u_data = under5_filtered.ix[c][1:].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
+    v_data = vaccine.ix[c].ix[v].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
+    u_data = under5.ix[c].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
 
     # get only the common years of results
     length = min(len(u_data), len(v_data))
@@ -154,6 +154,7 @@ for c, v in vaccine_filtered.index:
     except ValueError:
         pass
 
+# show the results
 country_improved = {}
 vaccine_count = {k: 0 for k in list(vaccine.index.levels[1])}
 for c, v, l in vaccine_granger_cause:
