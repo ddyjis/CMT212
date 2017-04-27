@@ -71,7 +71,7 @@
     <script src="js/colorbrewer.v1.js"></script>
     <script src="js/materialize.js"></script>
     <script>
-        var svg, g;
+        var map_svg, map_g;
         var projection, path;
         var map_width, map_height;
 
@@ -129,7 +129,7 @@
                 .scale(s)
                 .translate(t);
 
-            var areas = g.selectAll(".area")
+            var areas = map_g.selectAll(".area")
                 .data(topojson.feature(world, world.objects.countries).features);
 
             areas
@@ -250,13 +250,10 @@
         }
 
         function init() {
-            map_width = $("#world_map").width();
-            map_height = map_width / 2.5; // keep the ratio
-
+            // creating the loading screen
             window_width = $(window).width();
             window_height = $(window).height();
 
-            // setting the loading screen
             loading_screen = d3.select(".loading-screen")
                 .attr("width", window_width)
                 .attr("height", window_height);
@@ -280,16 +277,19 @@
                 .attr("y", window_height / 2)
                 .text("Loading...");
 
-            // map
-            svg = d3.select("#world_map")
+            // creating the map
+            map_width = $("#world_map").width();
+            map_height = map_width / 2.5; // keep a fixed aspect ratio
+
+            map_svg = d3.select("#world_map")
                 .append("svg")
                 .attr("width", map_width)
                 .attr("height", map_height);
 
-            g = svg
+            map_g = map_svg
                 .append("g");
 
-            g
+            map_g
                 .append("rect")
                 .attr("width", map_width)
                 .attr("height", map_height)
@@ -310,7 +310,7 @@
                 .projection(projection);
 
             // legend
-            var legend = g.selectAll(".legend")
+            var legend = map_g.selectAll(".legend")
                 .data(["#ffffff"].concat(colours));
 
             var new_legend = legend
@@ -354,7 +354,7 @@
                     }
                 })
 
-            g.select("#year-label")
+            map_g.select("#year-label")
                 .append("text")
                 .attr("x", "15")
                 .attr("y", "24")
@@ -399,12 +399,13 @@
 
         $("#select-country").change(function() {
             selected_country = $("#select-country option:selected").val();
-            alert(selected_country)
             if (selected_country == "WORLD") {
                 $(".vaccine").hide();
             } else {
                 $(".vaccine").show();
             }
+
+
         })
 
         // play button
