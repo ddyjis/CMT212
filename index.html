@@ -32,9 +32,10 @@
     <br />
     <div class="container">
         <!--settings-->
+        <h4 class="center-align">Under 5 Mortarity Rates</h4>
         <form class="map_form">
             <div class="row">
-                <div class="input-field col s12 m6 l4 offset-l4">
+                <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
                     <select name="select-country" id="select-country">
                         <option value="WORLD" selected>World</option>
                     </select>
@@ -46,7 +47,7 @@
                     <label>Year</label>
                     <div class="row">
                         <div class="range-field col s10">
-                            <input type="range" name="year" id="year" min="1980" max="2015" value="2015" />
+                            <data type="range" name="year" id="year" min="1980" max="2015" value="2015" />
                         </div>
                         <div class="col s2">
                             <span class="red-text text-lighten-2"><i class="fa fa-play-circle-o fa-2x" id="play-btn"></i></span>
@@ -55,13 +56,18 @@
                 </div>
             </div>
         </form>
-        <h3 class="center-align">Under 5 Mortarity Rates</h3>
         <div id="world_map"></div>
+        <h4 class="vaccine center-align">Vaccination Coverate</h4>
         <form class="vaccine vaccine_form">
-
+            <div class="row">
+                <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
+                    <select name="select-vaccine" id="select-vaccine">
+                    </select>
+                    <label for="select-vaccine">Vaccine</label>
+                </div>
+            </div>
         </form>
-        <h3 class="vaccine center-align">Vaccination Coverate</h3>
-        <div class="vaccine" id="vaccine_chart"></div>
+        <div class="vaccine" id="vaccine-chart"></div>
     </div>
 
     <script src="js/d3.v4.js"></script>
@@ -71,13 +77,14 @@
     <script src="js/colorbrewer.v1.js"></script>
     <script src="js/materialize.js"></script>
     <script>
+        var map_projection, map_path;
         var map_svg, map_g;
-        var projection, path;
         var map_width, map_height;
 
         var ISO2Name, Name2ISO;
         var under5_data, vaccine_data, incidence_data;
         var world_topo;
+        var vaccine_in_country;
 
         var loading_screen;
         var window_width, window_height;
@@ -86,8 +93,18 @@
 
         var selected_country = "WORLD";
         var selected_year = "2015";
+        var selected_vaccine = "";
 
         var tooltip;
+
+        var plot_svg, plot_g;
+        var plot_width, plot_height;
+        var plot_margin = {top: 30, right: 70, bottom: 70, left:70 };
+        var plot_date_parse = d3.timeParse("$Y")
+        var plot_x_scale, plot_y_scale_left, plot_y_scale_right;
+        var plot_x_axis, plot_y_axis_left, plot_y_axis_right;
+        var plot_chart_data;
+        var plot_line_vaccine, plot_line_under5;
 
         var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
@@ -113,19 +130,31 @@
                 .style("top", (d3.event.pageY + 10) + "px")
         }
 
+        function plot(data) {
+            var vaccine_data = []
+            for (var k in data) {
+                vaccine_data.push({"year": k, "coverage": data[k]})
+            }
+            
+            plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
+            plot_y_scale_left.domain([0, 1])
+
+            // var lines = 
+        }
+
         function draw(world) {
             var transit = d3.transition()
                 .duration(1000);
 
-            projection
+            map_projection
                 .scale(1)
                 .translate([0, 0]);
 
-            var b = path.bounds(topojson.feature(world, world.objects.countries));
+            var b = map_path.bounds(topojson.feature(world, world.objects.countries));
             var s = 0.95 / Math.max((b[1][0] - b[0][0]) / map_width, (b[1][1] - b[0][1]) / map_height);
             var t = [(map_width - s * (b[1][0] + b[0][0])) / 2, (map_height - s * (b[1][1] + b[0][1])) / 2];
 
-            projection
+            map_projection
                 .scale(s)
                 .translate(t);
 
@@ -200,7 +229,7 @@
                 .attr("id", function(d) {
                     return d.properties.ADM0_A3;
                 })
-                .attr("d", path)
+                .attr("d", map_path)
                 .attr("fill", function(d) {
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
@@ -226,9 +255,10 @@
             // })
         }
 
-        function load_data(ISO2NameData, under5Data, vaccineData, incidenceData) {
+        function load_data(ISO2NameData, VICData, under5Data, vaccineData, incidenceData) {
             ISO2Name = ISO2NameData;
             Name2ISO = _.invert(ISO2Name);
+            vaccine_in_country = VICData;
             under5_data = under5Data;
             vaccine_data = vaccineData;
             incidence_data = incidenceData;
@@ -303,11 +333,11 @@
 
             // according to https://www.wikiwand.com/en/List_of_countries_by_easternmost_point,
             // most eastern part of the world is Russia at 169.40 W
-            projection = d3.geoEquirectangular()
+            map_projection = d3.geoEquirectangular()
                 .rotate([-10.5, 0]); // rotate a little for displaying Russia in a whole piece
 
-            path = d3.geoPath()
-                .projection(projection);
+            map_path = d3.geoPath()
+                .projection(map_projection);
 
             // legend
             var legend = map_g.selectAll(".legend")
@@ -368,19 +398,67 @@
                 .attr("class", "tooltip")
                 .style("opacity", "0");
 
+            plot_width = $("#vaccine-chart").width();
+            plot_height = plot_width / 1.6;
+
+            plot_svg = d3.select("#vaccine-chart")
+                .append("svg")
+                .attr("width", plot_width)
+                .attr("height", plot_height);
+            
+            plot_g = plot_svg
+                .append("g")
+                .attr("transform", "translate(" + plot_margin.top + ", " + plot_margin.left + ")");
+                
+            plot_x_axis = d3.axisBottom()
+                .scale(plot_x_scale);
+            plot_y_axis_left = d3.axisLeft()
+                .scale(plot_y_scale_left);
+            plot_y_axis_right = d3.axisRight()
+                .scale(plot_y_scale_right)
+
+            plot_width = plot_width - plot_margin.left - plot_margin.right;
+            plot_height = plot_height - plot_margin.top - plot_margin.bottom;
+
+            plot_svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0, " + plot_height + ")");
+            plot_svg.append("g")
+                .attr("class", "y-axis-left");
+            plot_svg.append("g")
+                .attr("class", "y-axis-right")
+                .attr("transform", "translate(" + plot_width + ")");
+
+            plot_x_scale = d3.scaleTime()
+                .range([0, plot_width]);
+            plot_y_scale_left = d3.scaleLinear()
+                .range([plot_height, 0]);
+            plot_y_scale_right = d3.scaleLinear()
+                .range([plot_height, 0]);
+
+            plot_line_vaccine = d3.line()
+                .x(function(d) {
+                    return plot_x_scale(plot_date_parse(d.year))
+                })
+                .y(function(d) {
+                    return plot_y_scale_left(+d.value)
+                })
+
             $(".vaccine").hide();
 
             d3.queue()
                 .defer(d3.json, "data/countries.topo.json")
                 .defer(d3.json, "data/ISO2Name.json")
+                .defer(d3.json, "data/Vaccine_in_Country.json")
                 .defer(d3.csv, "data/under5.csv")
                 .defer(d3.csv, "data/vaccine.csv")
                 .defer(d3.csv, "data/incidence.csv")
-                .await(function(error, world, ISO2NameData, under5Data, vaccineData, incidenceData) {
-                    load_data(ISO2NameData, under5Data, vaccineData, incidenceData);
+                .await(function(error, world, ISO2NameData, VICData, under5Data, vaccineData, incidenceData) {
+                    load_data(ISO2NameData, VICData, under5Data, vaccineData, incidenceData);
                     world_topo = world;
                     draw(world_topo);
                     loading_screen.remove();
+
                     // code used to find intersection of countries in dataset and topojson
                     // $.getJSON("data/Pre-processing/ISO_list_in_dataset.json", function(data) {
                     //     alert(_.intersection(data, ISO_List))
@@ -399,13 +477,52 @@
 
         $("#select-country").change(function() {
             selected_country = $("#select-country option:selected").val();
-            if (selected_country == "WORLD") {
+            if (selected_country == "WORLD" || ISO_List.indexOf(selected_country) == -1) {
                 $(".vaccine").hide();
             } else {
                 $(".vaccine").show();
+
+                d3.select("#select-vaccine")
+                    .selectAll("option")
+                    .remove();
+
+                d3.select("#select-vaccine")
+                    .selectAll("option")
+                    .data(vaccine_in_country[selected_country])
+                    .enter()
+                    .append("option")
+                    .attr("value", function(d) {
+                        return d
+                    })
+                    .text(function(d) {
+                        return d
+                    });
+
+                plot_chart_data = [];
+                for (var v in vaccine_data) {
+                    if (vaccine_data[v]["ISO_code"] == selected_country) {
+                        plot_chart_data.push(_.omit(vaccine_data[v], "ISO_code"))
+                    }
+                }
+
+                $("#select-vaccine option").first().prop("selected", true);
+                selected_vaccine = $("#select-vaccine option").first().val();
+                $("#select-vaccine").trigger("change")
+                // initialise selection dropdown for materialcss
+                $("select").material_select();
             }
+        })
 
-
+        $("#select-vaccine").change(function() {
+            selected_vaccine = $("#select-vaccine option:selected").val();
+            
+            var selected_vaccine_data;
+            for (var i=0; i < plot_chart_data.length; i++) {
+                if (plot_chart_data[i]["Vaccine"] == selected_vaccine) {
+                    selected_vaccine_data = _.omit(plot_chart_data[i], "Vaccine")
+                }
+            }
+            plot(selected_vaccine_data);
         })
 
         // play button
