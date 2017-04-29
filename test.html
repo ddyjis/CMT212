@@ -23,7 +23,7 @@
     <div class="navbar-fixed">
         <nav>
             <div class="nav-wrapper red lighten-2">
-                <a href="#" class="brand-logo center">Vaccination and Chlid Mortarity</a>
+                <a href="#" class="brand-logo center">Vaccination and Chlid Mortality</a>
             </div>
         </nav>
     </div>
@@ -31,8 +31,8 @@
     <!--content-->
     <br />
     <div class="container">
-        <!--settings-->
-        <h4 class="center-align">Under 5 Mortarity Rates</h4>
+        
+        <h4 class="center-align">Under 5 Mortality Rates Across the World</h4>
         <form>
             <div class="row">
                 <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
@@ -57,9 +57,13 @@
             </div>
         </form>
         <div id="map"></div>
-        <h4 class="pie center-align">Vaccination Coverage</h4>
+    
+        <h4 class="pie center-align" id="pie-title"></h4>
         <div class="pie row" id="pie-charts"></div>
+                
+        <h4 class="plot center-align" id="plot-title"></h4>
         <div class="plot" id="vaccine-plot"></div>
+
     </div>
 
     <script src="js/d3.v4.js"></script>
@@ -106,22 +110,6 @@
 
         var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
-        function update_tooltip(d) {
-            map_tooltip
-                .style("opacity", "0.9")
-            map_tooltip
-                .html("<h6>" + ISO2Name[d.properties.ADM0_A3] + "</h6><p>" + function() {
-                    for (var i = 0; i < under5_data.length; i++) {
-                        if (under5_data[i]["ISO Code"] === selected_country && under5_data[i][selected_year] != "") {
-                            return "Median mortarity: " + under5_data[i][selected_year]
-                        }
-                    }
-                    return "No data"
-                } + "</p>")
-                .style("left", (d3.event.pageX + 10) + "px")
-                .style("top", (d3.event.pageY + 10) + "px")
-        }
-
         function plot(data) {
             var v_data = []
             for (var k in data) {
@@ -151,13 +139,13 @@
                 .attr("d", plot_line_vaccine);
 
             d3.select(".x-axis")
-                .call(x_axis);
+                .call(plot_x_axis);
 
             d3.select(".y-axis-left")
-                .call(y_axis_left);
+                .call(plot_y_axis_left);
 
             d3.select(".y-axis-right")
-                .call(y_axis_right);
+                .call(plot_y_axis_right);
         }
 
         function draw_map(world) {
@@ -200,7 +188,7 @@
                     var found = false
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
-                            output_text = output_text + "Median: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
+                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
                             found = true
                         }
                     }
@@ -220,7 +208,7 @@
                     var found = false
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
-                            output_text = output_text + "Median: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
+                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
                             found = true
                         }
                     }
@@ -410,7 +398,7 @@
 
         function initialise_plot() {
             plot_width = $("#vaccine-plot").width();
-            plot_height = plot_width / 2;
+            plot_height = Math.max(plot_width / 2, $(window).height() - 150);
 
             plot_svg = d3.select("#vaccine-plot")
                 .append("svg")
@@ -455,7 +443,7 @@
         }
 
         function init() {
-            draw_loading();
+            draw_loading();    
             initialise_map();
             initialise_plot();
             $(".pie").hide();
@@ -507,7 +495,24 @@
                 .attr("class", "pie-chart col s6 m4 l3")
                 .attr("id", function(d) { return d + "_coverage" })
                 .html(function(d) { return "<h5 class='center-align'>" + d + "</h5>" })
-                .on("click", function() { alert("clicked")})
+                .on("click", function(d) { 
+                    selected_vaccine = d;
+                    $("#plot-title").html(selected_vaccine + " Coverage in " + ISO2Name[selected_country] + " Over Year")
+                    $(".plot").show()
+
+                    var selected_vaccine_data;
+
+                    for (var i=0; i < plot_chart_data.length; i++) {
+                        if (plot_chart_data[i]["Vaccine"] == selected_vaccine) {
+                            selected_vaccine_data = _.omit(plot_chart_data[i], "Vaccine")
+                        }
+                    }
+                    plot(selected_vaccine_data);
+
+                    $("html body").animate({
+                        scrollTop: $("#plot-title").offset().top - 70
+                }, 1000, "swing")
+                })
                 
             var div_width;
             var svg = d3.selectAll(".pie-chart")
@@ -571,7 +576,6 @@
                 $(".plot").hide();
             } else {
                 $(".pie").show();
-                $(".plot").show();
 
                 plot_chart_data = [];
                 for (var v in vaccine_data) {
@@ -580,7 +584,12 @@
                     }
                 }
 
+                $("#pie-title").html("Vaccine Coverage in " + ISO2Name[selected_country] + " in " + selected_year)
+
                 draw_pie();
+                $("html body").animate({
+                    scrollTop: $("#pie-title").offset().top - 70
+                }, 1000, "swing")
             }
         })
 
