@@ -14,3 +14,36 @@
     background: lightsteelblue;
     border: 1px;
 }
+
+.y-axis-left path {
+    stroke: #31a354;
+}
+
+.y-axis-left text {
+    stroke: #31a354;
+    font-family: "Roboto", sans-serif;
+    font-size: 1.5em;
+}
+
+.y-axis-left line {
+    stroke: #31a354;
+}
+
+.y-axis-right path {
+    stroke: #fc9272;
+}
+
+.y-axis-right text {
+    stroke: #fc9272;
+    font-family: "Roboto", sans-serif;
+    font-size: 1.5em;
+}
+
+.y-axis-right line {
+    stroke: #fc9272;
+}
+
+.x-axis text {
+    font-family: "Roboto", sans-serif;
+    font-size: 1.5em;
+}

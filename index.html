@@ -120,23 +120,51 @@
                 }
             }
 
+            var u_data = []
+            for (var i = 0; i < under5_data.length; i++) {
+                if (under5_data[i]["ISO Code"] == selected_country) {
+                    temp = _.omit(under5_data[i], "ISO Code")
+                    for (var k in temp) {
+                        if (temp[k] == "" || +k < 1980) {
+                            u_data.push({ "year": k, "value": null })
+                        } else {
+                            u_data.push({ "year": k, "value": temp[k] })
+                        }
+                    }
+                }
+            }
+
             plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
             plot_y_scale_left.domain([0, 1]);
-            plot_y_scale_right.domain([0, 0.36]);
+            plot_y_scale_right.domain(d3.extent(u_data, function(d) { return +d.value }));
 
-            var lines_vaccine = plot_g.selectAll(".line")
+            var lines_vaccine = plot_g.selectAll(".vaccine-line")
                 .data([v_data]);
 
             lines_vaccine
                 .enter()
                 .append("path")
-                .attr("class", "line")
+                .attr("class", "vaccine-line")
                 .attr("fill", "none")
-                .attr("stroke", "black")
+                .attr("stroke", colorbrewer.Greens[3][2])
                 .attr("stroke-width", "2px")
                 .merge(lines_vaccine)
                 .transition(transit)
                 .attr("d", plot_line_vaccine);
+
+            var lines_under5 = plot_g.selectAll(".under5-line")
+                .data([u_data]);
+
+            lines_under5
+                .enter()
+                .append("path")
+                .attr("class", "under5-line")
+                .attr("fill", "none")
+                .attr("stroke", colorbrewer.Reds[7][2])
+                .attr("stroke-width", "2px")
+                .merge(lines_under5)
+                .transition(transit)
+                .attr("d", plot_line_under5);
 
             d3.select(".x-axis")
                 .call(plot_x_axis);
@@ -145,6 +173,7 @@
                 .call(plot_y_axis_left);
 
             d3.select(".y-axis-right")
+                .transition(transit)
                 .call(plot_y_axis_right);
         }
 
@@ -440,6 +469,12 @@
                 .curve(d3.curveBasis)
                 .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
                 .y(function(d) { return plot_y_scale_left(+d.coverage) })
+            
+            plot_line_under5 = d3.line()
+                .defined(function(d) { return d.value })
+                .curve(d3.curveBasis)
+                .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
+                .y(function(d) { return plot_y_scale_right(+d.value) })
         }
 
         function init() {
