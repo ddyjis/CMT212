@@ -111,24 +111,28 @@
         var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
         function plot(data) {
-            var v_data = []
+            var v_line_data = []
+            var v_dot_data = []
             for (var k in data) {
                 if (data[k] == "") {
-                    v_data.push({ "year": k, "coverage": null })
+                    v_line_data.push({ "year": k, "coverage": null })
                 } else {
-                    v_data.push({ "year": k, "coverage": data[k] })
+                    v_line_data.push({ "year": k, "coverage": data[k] })
+                    v_dot_data.push({ "year": k, "coverage": data[k] })
                 }
             }
 
-            var u_data = []
+            var u_line_data = []
+            var u_dot_data = []
             for (var i = 0; i < under5_data.length; i++) {
                 if (under5_data[i]["ISO Code"] == selected_country) {
                     temp = _.omit(under5_data[i], "ISO Code")
                     for (var k in temp) {
                         if (temp[k] == "" || +k < 1980) {
-                            u_data.push({ "year": k, "value": null })
+                            u_line_data.push({ "year": k, "value": null })
                         } else {
-                            u_data.push({ "year": k, "value": temp[k] })
+                            u_line_data.push({ "year": k, "value": temp[k] })
+                            u_dot_data.push({ "year": k, "value": temp[k] })
                         }
                     }
                 }
@@ -136,10 +140,14 @@
 
             plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
             plot_y_scale_left.domain([0, 1]);
-            plot_y_scale_right.domain(d3.extent(u_data, function(d) { return +d.value }));
+            plot_y_scale_right.domain(d3.extent(u_line_data, function(d) { return +d.value }));
 
             var lines_vaccine = plot_g.selectAll(".vaccine-line")
-                .data([v_data]);
+                .data([v_line_data]);
+
+            lines_vaccine
+                .exit()
+                .remove();
 
             lines_vaccine
                 .enter()
@@ -153,7 +161,11 @@
                 .attr("d", plot_line_vaccine);
 
             var lines_under5 = plot_g.selectAll(".under5-line")
-                .data([u_data]);
+                .data([u_line_data]);
+
+            lines_under5
+                .exit()
+                .remove()
 
             lines_under5
                 .enter()
@@ -165,6 +177,48 @@
                 .merge(lines_under5)
                 .transition(transit)
                 .attr("d", plot_line_under5);
+
+            var dots_vaccine = plot_g.selectAll(".vaccine-dot")
+                .data(v_dot_data);
+
+            dots_vaccine
+                .exit()
+                .remove()
+
+            dots_vaccine
+                .enter()
+                .append("circle")
+                .attr("class", "vaccine-dot")
+                .attr("fill", "white")
+                .attr("stroke", colorbrewer.Greens[3][2])
+                .attr("stroke-width", "2px")
+                .attr("r", "4")
+                .merge(dots_vaccine)
+                .transition(transit)
+                .attr("cx", function(d) { return plot_x_scale(plot_date_parse(d.year)) })
+                .attr("cy", function(d) { return plot_y_scale_left(+d.coverage) })
+
+            var dots_under5 = plot_g.selectAll(".under5-dot")
+                .data(u_dot_data)
+
+            dots_under5
+                .exit()
+                .remove()
+
+            dots_under5
+                .enter()
+                .append("rect")
+                .attr("class", "under5-dot")
+                .attr("fill", "white")
+                .attr("stroke", colorbrewer.Reds[7][2])
+                .attr("stroke-width", "2px")
+                .attr("width", "10px")
+                .attr("height", "10px")
+                .merge(dots_under5)
+                .transition(transit)
+                .attr("id", function(d) {return selected_country + "-" + selected_vaccine + "-" + d.year})
+                .attr("x", function(d) { return plot_x_scale(plot_date_parse(d.year)) - 5 })
+                .attr("y", function(d) { return plot_y_scale_right(+d.value) - 5 })
 
             d3.select(".x-axis")
                 .call(plot_x_axis);
@@ -466,13 +520,13 @@
 
             plot_line_vaccine = d3.line()
                 .defined(function(d) { return d.coverage })
-                .curve(d3.curveBasis)
+                .curve(d3.curveCardinal)
                 .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
                 .y(function(d) { return plot_y_scale_left(+d.coverage) })
             
             plot_line_under5 = d3.line()
                 .defined(function(d) { return d.value })
-                .curve(d3.curveBasis)
+                .curve(d3.curveCardinal)
                 .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
                 .y(function(d) { return plot_y_scale_right(+d.value) })
         }
