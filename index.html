@@ -47,7 +47,7 @@
                     <label>Year</label>
                     <div class="row">
                         <div class="range-field col s10">
-                            <data type="range" name="year" id="year" min="1980" max="2015" value="2015" />
+                            <input type="range" name="year" id="year" min="1980" max="2015" value="2015" />
                         </div>
                         <div class="col s2">
                             <span class="red-text text-lighten-2"><i class="fa fa-play-circle-o fa-2x" id="play-btn"></i></span>
@@ -57,7 +57,7 @@
             </div>
         </form>
         <div id="world_map"></div>
-        <h4 class="vaccine center-align">Vaccination Coverate</h4>
+        <h4 class="vaccine center-align">Vaccination Coverage</h4>
         <form class="vaccine vaccine_form">
             <div class="row">
                 <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
@@ -100,7 +100,7 @@
         var plot_svg, plot_g;
         var plot_width, plot_height;
         var plot_margin = {top: 30, right: 70, bottom: 70, left:70 };
-        var plot_date_parse = d3.timeParse("$Y")
+        var plot_date_parse = d3.timeParse("%Y")
         var plot_x_scale, plot_y_scale_left, plot_y_scale_right;
         var plot_x_axis, plot_y_axis_left, plot_y_axis_right;
         var plot_chart_data;
@@ -131,15 +131,38 @@
         }
 
         function plot(data) {
-            var vaccine_data = []
+            var v_data = []
             for (var k in data) {
-                vaccine_data.push({"year": k, "coverage": data[k]})
+                if (data[k] == "") {
+                    v_data.push({"year": k, "coverage": null})
+                } else {                    
+                    v_data.push({"year": k, "coverage": data[k]})
+                }
             }
             
-            plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
-            plot_y_scale_left.domain([0, 1])
+            console.log(v_data)
 
-            // var lines = 
+            plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
+            plot_y_scale_left.domain([0, 1]);
+            plot_y_scale_right.domain([0, 0.35]);
+
+            var vaccine_lines = plot_g.selectAll(".line")
+                .data([v_data]);
+            
+            vaccine_lines
+                .enter()
+                .append("path")
+                .attr("class", "line")
+                .attr("fill", "none")
+                .attr("stroke", "black")
+                .merge(vaccine_lines)
+                .attr("d", plot_line_vaccine);
+            
+            d3.select(".x-axis")
+                .call(plot_x_axis)
+            
+            d3.select(".y-axis-left")
+                .call(plot_y_axis_left)
         }
 
         function draw(world) {
@@ -384,15 +407,6 @@
                     }
                 })
 
-            map_g.select("#year-label")
-                .append("text")
-                .attr("x", "15")
-                .attr("y", "24")
-                .attr("id", "year-label")
-                .attr("font-family", "Roboto, Sans Serif")
-                .attr("font-size", "18px")
-                .text("2015");
-
             tooltip = d3.select("body")
                 .append("div")
                 .attr("class", "tooltip")
@@ -408,7 +422,26 @@
             
             plot_g = plot_svg
                 .append("g")
-                .attr("transform", "translate(" + plot_margin.top + ", " + plot_margin.left + ")");
+                .attr("transform", "translate(" + plot_margin.left + ", " + plot_margin.top + ")");
+
+            plot_width = plot_width - plot_margin.left - plot_margin.right;
+            plot_height = plot_height - plot_margin.top - plot_margin.bottom;
+
+            plot_g.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0, " + plot_height + ")");
+            plot_g.append("g")
+                .attr("class", "y-axis-left");
+            plot_g.append("g")
+                .attr("class", "y-axis-right")
+                .attr("transform", "translate(" + plot_width + ", 0)");
+
+            plot_x_scale = d3.scaleTime()
+                .range([0, plot_width]);
+            plot_y_scale_left = d3.scaleLinear()
+                .range([plot_height, 0]);
+            plot_y_scale_right = d3.scaleLinear()
+                .range([plot_height, 0]);
                 
             plot_x_axis = d3.axisBottom()
                 .scale(plot_x_scale);
@@ -417,32 +450,11 @@
             plot_y_axis_right = d3.axisRight()
                 .scale(plot_y_scale_right)
 
-            plot_width = plot_width - plot_margin.left - plot_margin.right;
-            plot_height = plot_height - plot_margin.top - plot_margin.bottom;
-
-            plot_svg.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", "translate(0, " + plot_height + ")");
-            plot_svg.append("g")
-                .attr("class", "y-axis-left");
-            plot_svg.append("g")
-                .attr("class", "y-axis-right")
-                .attr("transform", "translate(" + plot_width + ")");
-
-            plot_x_scale = d3.scaleTime()
-                .range([0, plot_width]);
-            plot_y_scale_left = d3.scaleLinear()
-                .range([plot_height, 0]);
-            plot_y_scale_right = d3.scaleLinear()
-                .range([plot_height, 0]);
-
             plot_line_vaccine = d3.line()
-                .x(function(d) {
-                    return plot_x_scale(plot_date_parse(d.year))
-                })
-                .y(function(d) {
-                    return plot_y_scale_left(+d.value)
-                })
+                .defined(function(d) { return d.coverage })
+                .curve(d3.curveBasis)
+                .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
+                .y(function(d) { return plot_y_scale_left(+d.coverage) })
 
             $(".vaccine").hide();
 
@@ -471,7 +483,6 @@
         // when the year is changed, update the map
         $("#year").change(function() {
             selected_year = this.value;
-            $("#year-label").html(selected_year);
             draw(world_topo);
         });
 
