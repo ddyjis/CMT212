@@ -89,6 +89,7 @@
         var loading_screen;
         var window_width, window_height;
 
+        var transit = d3.transition().duration(1000);
         var active = d3.select(null);
 
         var selected_country = "WORLD";
@@ -139,12 +140,10 @@
                     v_data.push({"year": k, "coverage": data[k]})
                 }
             }
-            
-            console.log(v_data)
 
             plot_x_scale.domain([plot_date_parse("1980"), plot_date_parse("2015")]);
             plot_y_scale_left.domain([0, 1]);
-            plot_y_scale_right.domain([0, 0.35]);
+            plot_y_scale_right.domain([0, 0.36]);
 
             var vaccine_lines = plot_g.selectAll(".line")
                 .data([v_data]);
@@ -155,20 +154,22 @@
                 .attr("class", "line")
                 .attr("fill", "none")
                 .attr("stroke", "black")
+                .attr("stroke-width", "2px")
                 .merge(vaccine_lines)
+                .transition(transit)
                 .attr("d", plot_line_vaccine);
             
             d3.select(".x-axis")
-                .call(plot_x_axis)
+                .call(plot_x_axis);
             
             d3.select(".y-axis-left")
-                .call(plot_y_axis_left)
+                .call(plot_y_axis_left);
+            
+            d3.select(".y-axis-right")
+                .call(plot_y_axis_right);
         }
 
         function draw(world) {
-            var transit = d3.transition()
-                .duration(1000);
-
             map_projection
                 .scale(1)
                 .translate([0, 0]);
@@ -413,7 +414,7 @@
                 .style("opacity", "0");
 
             plot_width = $("#vaccine-chart").width();
-            plot_height = plot_width / 1.6;
+            plot_height = plot_width / 2;
 
             plot_svg = d3.select("#vaccine-chart")
                 .append("svg")
