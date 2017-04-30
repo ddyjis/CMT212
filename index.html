@@ -106,8 +106,6 @@
         var loading_screen;
         var window_width, window_height;
 
-        var transit = d3.transition().duration(1000);
-
         var active = d3.select(null);
 
         var selected_country = "WORLD";
@@ -164,7 +162,7 @@
                 .attr("stroke", colorbrewer.Reds[7][2])
                 .attr("stroke-width", "2px")
                 .merge(lines_under5)
-                .transition(transit)
+                .transition().duration(1000)
                 .attr("d", plot_line_under5);
 
             var dots_under5 = plot_g.selectAll(".under5-dot")
@@ -202,7 +200,7 @@
                         .style("display", "none")
                 })
                 .merge(dots_under5)
-                .transition(transit)
+                .transition().duration(1000)
                 .attr("id", function(d) {return selected_country + "-" + selected_vaccine + "-" + d.year})
                 .attr("x", function(d) { return plot_x_scale(plot_date_parse(d.year)) - 5 })
                 .attr("y", function(d) { return plot_y_scale_right(+d.value) - 5 })
@@ -222,7 +220,7 @@
                 .attr("stroke", colorbrewer.Greens[3][2])
                 .attr("stroke-width", "2px")
                 .merge(lines_vaccine)
-                .transition(transit)
+                .transition().duration(1000)
                 .attr("d", plot_line_vaccine);
 
 
@@ -260,7 +258,7 @@
                         .style("display", "none")
                 })
                 .merge(dots_vaccine)
-                .transition(transit)
+                .transition().duration(1000)
                 .attr("cx", function(d) { return plot_x_scale(plot_date_parse(d.year)) })
                 .attr("cy", function(d) { return plot_y_scale_left(+d.coverage) })
 
@@ -271,7 +269,7 @@
                 .call(plot_y_axis_left);
 
             d3.select(".y-axis-right")
-                .transition(transit)
+                .transition().duration(1000)
                 .call(plot_y_axis_right);
         }
 
@@ -355,7 +353,7 @@
                 })
 
             new_area.merge(areas)
-                .transition(transit)
+                .transition().duration(1000)
                 .attr("id", function(d) {
                     return d.properties.ADM0_A3;
                 })
@@ -640,7 +638,9 @@
         $("#year").change(function() {
             selected_year = this.value;
             draw_map(world_topo);
-            draw_pie()
+            if (ISO_List.indexOf(selected_country) >= 0){
+                draw_pie()
+            }
         });
 
         function draw_pie() {
