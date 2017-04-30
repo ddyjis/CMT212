@@ -15,35 +15,20 @@
     border: 1px;
 }
 
-.y-axis-left path {
+.tooltip p, .tooltip h5 {
+    margin: 0px
+}
+
+.y-axis-left path, .y-axis-left line, .y-axis-left text  {
     stroke: #31a354;
 }
 
-.y-axis-left text {
-    stroke: #31a354;
+.y-axis-left text, .y-axis-right text, .x-axis text, .axis_label {
     font-family: "Roboto", sans-serif;
-    font-size: 1.5em;
+    font-size: 1.2em;
+    font-weight: 300;
 }
 
-.y-axis-left line {
-    stroke: #31a354;
-}
-
-.y-axis-right path {
+.y-axis-right path, .y-axis-right text, .y-axis-right line {
     stroke: #fc9272;
-}
-
-.y-axis-right text {
-    stroke: #fc9272;
-    font-family: "Roboto", sans-serif;
-    font-size: 1.5em;
-}
-
-.y-axis-right line {
-    stroke: #fc9272;
-}
-
-.x-axis text {
-    font-family: "Roboto", sans-serif;
-    font-size: 1.5em;
 }

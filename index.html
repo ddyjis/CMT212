@@ -29,17 +29,16 @@
     </div>
 
     <!--content-->
-    <br />
     <div class="container">
         
-        <h4 class="center-align">Under 5 Mortality Rates Across the World</h4>
+        <h4 class="center-align" id="map-title">Under 5 Mortality Rates Across the World</h4>
         <form>
             <div class="row">
                 <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
+                    <label for="select-country">Country</label>
                     <select name="select-country" id="select-country">
                         <option value="WORLD" selected>World</option>
                     </select>
-                    <label for="select-country">Country</label>
                 </div>
             </div>
             <div class="row">
@@ -90,6 +89,7 @@
         var plot_x_axis, plot_y_axis_left, plot_y_axis_right;
         var plot_chart_data;
         var plot_line_vaccine, plot_line_under5;
+        var plot_tooltip;
 
         var ISO2Name, Name2ISO;
         var under5_data, vaccine_data, incidence_data;
@@ -142,24 +142,6 @@
             plot_y_scale_left.domain([0, 1]);
             plot_y_scale_right.domain(d3.extent(u_line_data, function(d) { return +d.value }));
 
-            var lines_vaccine = plot_g.selectAll(".vaccine-line")
-                .data([v_line_data]);
-
-            lines_vaccine
-                .exit()
-                .remove();
-
-            lines_vaccine
-                .enter()
-                .append("path")
-                .attr("class", "vaccine-line")
-                .attr("fill", "none")
-                .attr("stroke", colorbrewer.Greens[3][2])
-                .attr("stroke-width", "2px")
-                .merge(lines_vaccine)
-                .transition(transit)
-                .attr("d", plot_line_vaccine);
-
             var lines_under5 = plot_g.selectAll(".under5-line")
                 .data([u_line_data]);
 
@@ -178,26 +160,6 @@
                 .transition(transit)
                 .attr("d", plot_line_under5);
 
-            var dots_vaccine = plot_g.selectAll(".vaccine-dot")
-                .data(v_dot_data);
-
-            dots_vaccine
-                .exit()
-                .remove()
-
-            dots_vaccine
-                .enter()
-                .append("circle")
-                .attr("class", "vaccine-dot")
-                .attr("fill", "white")
-                .attr("stroke", colorbrewer.Greens[3][2])
-                .attr("stroke-width", "2px")
-                .attr("r", "4")
-                .merge(dots_vaccine)
-                .transition(transit)
-                .attr("cx", function(d) { return plot_x_scale(plot_date_parse(d.year)) })
-                .attr("cy", function(d) { return plot_y_scale_left(+d.coverage) })
-
             var dots_under5 = plot_g.selectAll(".under5-dot")
                 .data(u_dot_data)
 
@@ -214,11 +176,86 @@
                 .attr("stroke-width", "2px")
                 .attr("width", "10px")
                 .attr("height", "10px")
+                .on("mouseover", function(d) {
+                    plot_tooltip
+                        .style("display", null)
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + Math.round(+d.value * 100) + "%</p>" })
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mousemove", function(d) {
+                    plot_tooltip
+                        .style("display", null)
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + Math.round(+d.value * 100) + "%</p>" })
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mouseout", function(d) {
+                    plot_tooltip
+                        .style("display", "none")
+                })
                 .merge(dots_under5)
                 .transition(transit)
                 .attr("id", function(d) {return selected_country + "-" + selected_vaccine + "-" + d.year})
                 .attr("x", function(d) { return plot_x_scale(plot_date_parse(d.year)) - 5 })
                 .attr("y", function(d) { return plot_y_scale_right(+d.value) - 5 })
+
+            var lines_vaccine = plot_g.selectAll(".vaccine-line")
+                .data([v_line_data]);
+
+            lines_vaccine
+                .exit()
+                .remove();
+
+            lines_vaccine
+                .enter()
+                .append("path")
+                .attr("class", "vaccine-line")
+                .attr("fill", "none")
+                .attr("stroke", colorbrewer.Greens[3][2])
+                .attr("stroke-width", "2px")
+                .merge(lines_vaccine)
+                .transition(transit)
+                .attr("d", plot_line_vaccine);
+
+
+            var dots_vaccine = plot_g.selectAll(".vaccine-dot")
+                .data(v_dot_data);
+
+            dots_vaccine
+                .exit()
+                .remove()
+
+            dots_vaccine
+                .enter()
+                .append("circle")
+                .attr("class", "vaccine-dot")
+                .attr("fill", "white")
+                .attr("stroke", colorbrewer.Greens[3][2])
+                .attr("stroke-width", "2px")
+                .attr("r", "4")
+                .on("mouseover", function(d) {
+                    plot_tooltip
+                        .style("display", null)
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Coverage: " + Math.round(+d.coverage * 100) + "%</p>" })
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mousemove", function(d) {
+                    plot_tooltip
+                        .style("display", null)
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Coverage: " + Math.round(+d.coverage * 100) + "%</p>" })
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY + 10) + "px")
+                })
+                .on("mouseout", function(d) {
+                    plot_tooltip
+                        .style("display", "none")
+                })
+                .merge(dots_vaccine)
+                .transition(transit)
+                .attr("cx", function(d) { return plot_x_scale(plot_date_parse(d.year)) })
+                .attr("cy", function(d) { return plot_y_scale_left(+d.coverage) })
 
             d3.select(".x-axis")
                 .call(plot_x_axis);
@@ -280,7 +317,7 @@
                     }
 
                     map_tooltip
-                        .style("opacity", "0.9")
+                        .style("display", null)
                     map_tooltip
                         .html(output_text)
                         .style("left", (d3.event.pageX + 10) + "px")
@@ -300,14 +337,14 @@
                     }
 
                     map_tooltip
-                        .style("opacity", "0.9")
+                        .style("display", null)
                     map_tooltip
                         .html(output_text)
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY + 10) + "px")
                 })
                 .on("mouseout", function() {
-                    map_tooltip.style("opacity", "0.0")
+                    map_tooltip.style("display", "none")
                 })
 
             new_area.merge(areas)
@@ -476,7 +513,7 @@
             map_tooltip = d3.select("body")
                 .append("div")
                 .attr("class", "tooltip")
-                .style("opacity", "0");
+                .style("display", "none");
         }
 
         function initialise_plot() {
@@ -529,6 +566,38 @@
                 .curve(d3.curveCardinal)
                 .x(function(d) { return plot_x_scale(plot_date_parse(d.year)) })
                 .y(function(d) { return plot_y_scale_right(+d.value) })
+
+            plot_svg
+                .append("text")
+                .text("Coverage Rate")
+                .attr("class", "axis_label")
+                .attr("transform", "rotate(-90)")
+                .attr("x", 0 - plot_margin.top - plot_height / 2)
+                .attr("y", plot_margin.left / 2)
+                .style("text-anchor", "middle")
+                .style("fill", colorbrewer.Greens[3][2])
+            
+            plot_svg
+                .append("text")
+                .text("Mortality Rate")
+                .attr("class", "axis_label")
+                .attr("transform", "rotate(90)")
+                .attr("x", plot_margin.top + plot_height / 2)
+                .attr("y", -plot_margin.left - plot_width - plot_margin.right / 2 - 10)
+                .style("text-anchor", "middle")
+                .style("fill", colorbrewer.Reds[7][2])
+
+            plot_svg
+                .append("text")
+                .text("Year")
+                .attr("class", "axis_label")
+                .attr("transform", "translate(" + (plot_margin.left + plot_width / 2) + ", " + (plot_margin.top + plot_height + plot_margin.bottom / 2) + ")")
+                .style("text-anchor", "middle")
+
+            plot_tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("display", "none")
         }
 
         function init() {
@@ -660,9 +729,9 @@
 
         $("#select-country").change(function() {
             selected_country = $("#select-country option:selected").val();
+            $(".plot").hide();
             if (selected_country == "WORLD" || ISO_List.indexOf(selected_country) == -1) {
                 $(".pie").hide();                
-                $(".plot").hide();
             } else {
                 $(".pie").show();
 
