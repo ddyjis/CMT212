@@ -32,3 +32,14 @@
 .y-axis-right path, .y-axis-right text, .y-axis-right line {
     stroke: #fc9272;
 }
+
+.pie-chart {
+    transition: all .25s ease-in-out;
+}
+
+.pie-chart:hover {
+    transform: scale(1.01);
+    -webkit-box-shadow: 0px 3px 20px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 3px 20px 0px rgba(0,0,0,0.75);
+    box-shadow: 0px 3px 20px 0px rgba(0,0,0,0.75);
+}

@@ -66,6 +66,11 @@
         <div class="plot" id="vaccine-plot"></div>
 
     </div>
+    <div class="fixed-action-btn">
+        <a class="btn-floating btn-large waves-effect waves-light red lighten-2" style="right: 12px; bottom: 12px;" id="go-to-top">
+            <i class="fa fa-angle-up"></i>
+        </a>
+    </div>
 
     <script src="js/d3.v4.js"></script>
     <script src="js/topojson.js"></script>
@@ -181,14 +186,14 @@
                 .on("mouseover", function(d) {
                     plot_tooltip
                         .style("display", null)
-                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + Math.round(+d.value * 100) + "%</p>" })
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + (+d.value * 100).toFixed(2) + "%</p>" })
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY + 10) + "px")
                 })
                 .on("mousemove", function(d) {
                     plot_tooltip
                         .style("display", null)
-                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + Math.round(+d.value * 100) + "%</p>" })
+                        .html(function() { return "<p>Year: " + d.year + "</p><p>Mortality: " + (+d.value * 100).toFixed(2) + "%</p>" })
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY + 10) + "px")
                 })
@@ -310,7 +315,7 @@
                     var found = false
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
-                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
+                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(4) + "</p>"
                             found = true
                         }
                     }
@@ -330,7 +335,7 @@
                     var found = false
                     for (var i = 0; i < under5_data.length; i++) {
                         if (under5_data[i]["ISO Code"] === d.properties.ADM0_A3 && under5_data[i][selected_year] != "") {
-                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(3) + "</p>"
+                            output_text = output_text + "Mortality: " + (+under5_data[i][selected_year]).toFixed(4) + "</p>"
                             found = true
                         }
                     }
@@ -508,7 +513,7 @@
                     if (i == 0) {
                         return "No Data"
                     } else {
-                        return ((i - 1) * 0.05).toFixed(3) + " - " + (i * 0.05).toFixed(3)
+                        return ((i - 1) * 0.05).toFixed(2) + " - " + (i * 0.05).toFixed(2)
                     }
                 })
 
@@ -639,6 +644,7 @@
         });
 
         function draw_pie() {
+            $("#pie-title").html("Vaccine Coverage in " + ISO2Name[selected_country] + " in " + selected_year)
             var arc = d3.arc();
             var pie = d3.pie()
                 .sort(null)
@@ -745,13 +751,15 @@
                     }
                 }
 
-                $("#pie-title").html("Vaccine Coverage in " + ISO2Name[selected_country] + " in " + selected_year)
-
                 draw_pie();
                 $("html body").animate({
                     scrollTop: $("#pie-title").offset().top - 70
                 }, 1000, "swing")
             }
+        })
+
+        $("#go-to-top").click(function(e) {
+            $("html body").animate({ scrollTop: 0}, "swing")
         })
 
         // play button
