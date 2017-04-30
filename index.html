@@ -32,6 +32,7 @@
     <div class="container">
         
         <h4 class="center-align" id="map-title">Under 5 Mortality Rates Across the World</h4>
+        <h6 class="center-align grey-text text-lighten-1">Select a country to investigate</h6>
         <form>
             <div class="row">
                 <div class="data-field col s12 m6 offset-m3 l4 offset-l4">
@@ -58,6 +59,7 @@
         <div id="map"></div>
     
         <h4 class="pie center-align" id="pie-title"></h4>
+        <h6 class="pie center-align grey-text text-lighten-1">Select a vaccine to see its trend across year</h6>
         <div class="pie row" id="pie-charts"></div>
                 
         <h4 class="plot center-align" id="plot-title"></h4>
@@ -633,6 +635,7 @@
         $("#year").change(function() {
             selected_year = this.value;
             draw_map(world_topo);
+            draw_pie()
         });
 
         function draw_pie() {
