@@ -38,9 +38,37 @@ Vaccine is shown in green and mortality is shown in red. Data points are connect
 
 #### Datasets
 
-Raw dataset from the source at in `data/Raw`  in Excel spreadsheet format. I manually converted them to CSV format. They were then pre-processed using Pandas. The codes could be seen in `preprocessing.py` or `preprocessing.ipynb`
+Raw dataset from the source at in `data/Raw`  in Excel spreadsheet format. I manually converted them to CSV format. They were then pre-processed using Pandas. Complete codes for preparation can be seen in `preprocessing.py` and comments in `index.html`. Codes are also explained below
 
-Since the data are from different sources, I found the common ISO between the dataset with Pandas. There were 194 countries in common and they were outputted to `data/Pre-processing/ISO_list_in_dataset.json` file for the visualisation to read.
+Since the data are from different sources, I need to find the common ISO codes between the datasets. 
+
+```python
+%matplotlib notebook
+import numpy as np
+import pandas as pd
+import json
+import csv
+import matplotlib
+import matplotlib.pyplot as plt
+
+# read in datasets
+under5 = pd.read_csv("data/Pre-processing/Under5Mortarity.csv")
+vaccine = pd.read_csv("data/Pre-processing/vaccine.csv")
+# display the number of countries in each dataset
+print("ISO Code in under5: {0}, vaccine: {1}".format(len(under5['ISO Code'].unique()), len(vaccine.ISO_code.unique())))
+print("Total Vaccine: {0}".format(len(vaccine.Vaccine.unique())))
+# find the common countries across the three datasets
+under5_idx = pd.Index(under5['ISO Code'])
+vaccine_idx = pd.Index(vaccine.ISO_code.unique())
+common_countries = under5_idx.intersection(vaccine_idx)
+print(len(common_countries))
+# output the common countries to JSON file
+ISO_File = open("data/Pre-processing/ISO_list_in_dataset.json", "w")
+ISO_File.write(json.dumps(list(common_countries.to_series())))
+ISO_File.close()
+```
+
+There were 194 countries in common and they were outputted to `data/Pre-processing/ISO_list_in_dataset.json` file for the visualisation to read.
 
 #### Geo Data
 
@@ -88,9 +116,43 @@ It was found that there were 193 intersections and the result is put back to `IS
 
 To convert ISO code to names, I got the ISO code table from Wikipedia and convert that to `data/Pre-processing/ISO2Name.json`
 
-Besides, consider the nature of the datasets, mortality data is the number of death per 1000 children at birth while vaccine coverage data is the percentage of adoption. I standardise both datasets and prepare them for JavaScript to read.
+```python
+# convert ISO to Country Names convertion table from CSV to JSON format
+ISO2Names = {}
+with open("data/Pre-processing/ISO2Names.csv", "r") as f:
+    reader = csv.reader(f)
+    for row in reader:
+        ISO2Names[row[0]] = row[1]
+ISO2Name_File = open("data/Pre-processing/ISO2Name.json", "w")
+ISO2Name_File.write(json.dumps(ISO2Names))
+ISO2Name_File.close()
+```
 
-Moreover, I listed out the vaccine adopted by each country and save that to `data/Vaccine_in_Country.json`
+Besides, consider the nature of the datasets, mortality data is the number of death per 1000 children at birth while vaccine coverage data is the percentage of adoption. I standardise both datasets and prepare them for JavaScript to read. Moreover, I listed out the vaccine adopted by each country and save that to `data/Vaccine_in_Country.json`
+
+```python
+# standardise data and arrange columns in increasing order for JavaScript to read
+under5 = under5.set_index("ISO Code").ix[:, 2:].apply(pd.to_numeric, errors="coerce").apply(lambda x: x/1000)
+vaccine = vaccine.set_index(["ISO_code", "Vaccine"]).ix[:, 2:].apply(lambda x: x/100)
+vaccine = vaccine[vaccine.columns[::-1]]
+
+# find the vaccine used in each country
+vaccine_in_country = {}
+for c, v in vaccine.index:
+    vaccine_in_country.setdefault(c, []).append(v)
+
+v_in_c_file = open("data/Vaccine_in_Country.json", "w")
+v_in_c_file.write(json.dumps(vaccine_in_country))
+v_in_c_file.close()
+
+max = 0
+for c in vaccine_in_country:
+    if len(vaccine_in_country[c]) > max:
+        max = len(vaccine_in_country[c])
+print(max)
+```
+
+
 
 ### Analysis of Data
 
@@ -166,7 +228,15 @@ By making use of the grid framework of Materialize, I can easily add many donut 
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5m3delvaj313j0kcac9.jpg)
 
-In the time series plots, I added data points in 
+In the time series plots, I added data points to both series. When users hover on the data points, details such as the year and rate appear in a tooltip. The scale for vaccine coverage is fixed to show whether there is a high or low adoption rate. The scale for mortality rate depends on the maximum mortality rate between 1980 and 2015. This scale changes so that it can reflect the changes during that time and hence audience can infer on the effects of vaccines.
+
+Coverage is represented by circles while mortality rate is represented by squares. This arrangement is because users are allowed to hover both data when the two data intersect as illustrated below
+
+![](http://ww3.sinaimg.cn/large/006tNbRwgy1ff62ilhkm7j307h04smxc.jpg)
+
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1ff62i50nhyj308504s74h.jpg)
+
+I also added a floating button at the lower right corner for users to quickly going back to the top of the page and select another country. When users select another country, a new set of pie charts is rendered but the time series plot will be hided. This is because previously selected vaccine may not be adopted in newly selected country. To prevent users' confusion for the absence of data, I hide the plot and require users to select a vaccine again.
 
 #### Other abandoned ideas
 
