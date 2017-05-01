@@ -700,12 +700,8 @@
                 .attr("transform", "translate(" + div_width / 2 + ", " + div_width / 2 + ")")
 
             var arcs = g.selectAll(".arc")
-                .data(function(d) {
-                    for (var i = 0; i < plot_chart_data.length; i++) {
-                        if (plot_chart_data[i]["Vaccine"] == d) {
-                            return pie([+plot_chart_data[i][selected_year], 1 - plot_chart_data[i][selected_year]])
-                        }
-                    }
+                .data(function(d, i) {
+                    return pie([+plot_chart_data[i][selected_year], 1 - plot_chart_data[i][selected_year]])
                 })
                 .enter()
                 .append("g")

@@ -54,18 +54,29 @@ import matplotlib.pyplot as plt
 # read in datasets
 under5 = pd.read_csv("data/Pre-processing/Under5Mortarity.csv")
 vaccine = pd.read_csv("data/Pre-processing/vaccine.csv")
+
 # display the number of countries in each dataset
 print("ISO Code in under5: {0}, vaccine: {1}".format(len(under5['ISO Code'].unique()), len(vaccine.ISO_code.unique())))
 print("Total Vaccine: {0}".format(len(vaccine.Vaccine.unique())))
+
 # find the common countries across the three datasets
 under5_idx = pd.Index(under5['ISO Code'])
 vaccine_idx = pd.Index(vaccine.ISO_code.unique())
 common_countries = under5_idx.intersection(vaccine_idx)
-print(len(common_countries))
+print("Number of common countries: {0}".format(len(common_countries)))
+
 # output the common countries to JSON file
 ISO_File = open("data/Pre-processing/ISO_list_in_dataset.json", "w")
 ISO_File.write(json.dumps(list(common_countries.to_series())))
 ISO_File.close()
+```
+
+And the output are as follow
+
+```
+ISO Code in under5: 197, vaccine: 194
+Total Vaccine: 20
+Number of common countries: 194
 ```
 
 There were 194 countries in common and they were outputted to `data/Pre-processing/ISO_list_in_dataset.json` file for the visualisation to read.
@@ -128,7 +139,7 @@ ISO2Name_File.write(json.dumps(ISO2Names))
 ISO2Name_File.close()
 ```
 
-Besides, consider the nature of the datasets, mortality data is the number of death per 1000 children at birth while vaccine coverage data is the percentage of adoption. I standardise both datasets and prepare them for JavaScript to read. Moreover, I listed out the vaccine adopted by each country and save that to `data/Vaccine_in_Country.json`
+Besides, consider the nature of the datasets, mortality data is the number of death per 1000 children at birth while vaccine coverage data is the percentage of adoption. I standardise both datasets and prepare them for JavaScript to read.
 
 ```python
 # standardise data and arrange columns in increasing order for JavaScript to read
@@ -136,27 +147,101 @@ under5 = under5.set_index("ISO Code").ix[:, 2:].apply(pd.to_numeric, errors="coe
 vaccine = vaccine.set_index(["ISO_code", "Vaccine"]).ix[:, 2:].apply(lambda x: x/100)
 vaccine = vaccine[vaccine.columns[::-1]]
 
-# find the vaccine used in each country
-vaccine_in_country = {}
-for c, v in vaccine.index:
-    vaccine_in_country.setdefault(c, []).append(v)
-
-v_in_c_file = open("data/Vaccine_in_Country.json", "w")
-v_in_c_file.write(json.dumps(vaccine_in_country))
-v_in_c_file.close()
-
-max = 0
-for c in vaccine_in_country:
-    if len(vaccine_in_country[c]) > max:
-        max = len(vaccine_in_country[c])
-print(max)
+# find the maximum value in the under5 dataset
+print("Maximum value of mortality rate between 1980 and 2015: {0}".format(under5.iloc[:, 30:].max(numeric_only=True).max()))
 ```
 
+And the output is
 
+```
+Maximum value of mortality rate between 1980 and 2015: 0.3369
+```
+
+Now the data is ready for analysis and visualisation. They are output to `data/under5.csv` and `data/vaccine.csv`.
 
 ### Analysis of Data
 
+The aim of this visualisation is to show the relationship between immunisation coverage and child mortality rate. First, I analysed the dataset separately.
 
+```python
+%matplotlib notebook
+import pandas as pd
+import numpy
+import pprint
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import grangercausalitytests as gctest
+from sklearn.linear_model import LinearRegression
+
+pp = pprint.PrettyPrinter(indent=4)
+
+# read in the dataset
+under5 = pd.read_csv("data/under5.csv")
+vaccine = pd.read_csv("data/vaccine.csv")
+under5 = under5.set_index("ISO Code")
+vaccine = vaccine.set_index(["ISO_code", "Vaccine"]).sort_index(level="ISO_code")
+
+# select only data from 1980 to 2015
+under5 = under5.iloc[:, list(range(30,66))]
+
+# plot the change in mortality rates distribution between 1980 and 2015 under the same x and y axis
+under5.iloc[:, [0, 35]].hist(grid=False, sharex=True, sharey=True, layout=(2,1))
+
+# calculate the median of mortality rate in 1980 and 2015
+print("Median of mortality rate in 1980: {0:.4f}".format(under5.ix[:, 0].dropna().median()))
+print("Median of mortality rate in 2015: {0:.4f}".format(under5.ix[:, -1].dropna().median()))
+```
+
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1ff6f2vd0ipj30f00en74x.jpg)
+
+```
+Median of mortality rate in 1980: 0.0750
+Median of mortality rate in 2015: 0.0177
+```
+
+The two histograms above shows the distribution of mortality rates in the world in 1980 and 2015 respectively. They are plotted with the same scales in x and y axis. It can be seen that children survival got much improved in 35 years. The whole distribution shifted to the left with higher peak. Both histograms consist of 10 bins. The bins for the maximum value in 1980 was at around 0.3 while that for 2015 was at around 0.15 which means the country with the worst situation had reduced the mortality rate by a half.
+
+The median of mortality rate reduced from 0.0750 to 0.0177 which means majority of countries have their child survivor rates improved. The mean is not compared as it should be weighted by the population of each country. 
+
+For the vaccine dataset, I computed the numbers of countries that used certain vaccination in 1980 and 2015 as well as the number of countries that had used a vaccine during the period.
+
+```python
+# find the popularity of each vaccine in 1980, 2015, and over the whole period
+vaccine_distribution_1980 = {}
+for c, v in vaccine.ix[:, 0].dropna().index:
+    vaccine_distribution_1980.setdefault(v, 0)
+    vaccine_distribution_1980[v] += 1
+
+vaccine_distribution_2015 = {}
+for c, v in vaccine.ix[:, -1].dropna().index:
+    vaccine_distribution_2015.setdefault(v, 0)
+    vaccine_distribution_2015[v] += 1
+    
+vaccine_distribution = {}
+for c, v in vaccine.index:
+    vaccine_distribution.setdefault(v, 0)
+    vaccine_distribution[v] += 1
+
+print("In 1980")
+pp.pprint(vaccine_distribution_1980)
+print("In 2015")
+pp.pprint(vaccine_distribution_2015)
+print("Over the period")
+pp.pprint(vaccine_distribution)
+vaccine_dis_data_1980 = pd.DataFrame(data=list(vaccine_distribution_1980.items())).set_index(0).sort_values(1)
+vaccine_dis_data_2015 = pd.DataFrame(data=list(vaccine_distribution_2015.items())).set_index(0).sort_values(1)
+vaccine_dis_data = pd.DataFrame(data=list(vaccine_distribution.items())).set_index(0).sort_values(1)
+vaccine_dis_data_1980.plot(kind="bar", title="In 1980")
+vaccine_dis_data_2015.plot(kind="bar", title="In 2015")
+vaccine_dis_data.plot(kind="bar", title="Over the period")
+```
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff6jksgaegj30gt0gz751.jpg)
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff6jl7lo3uj30hv0jfgnf.jpg)
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff6jlzb3bxj30hn0k6jtf.jpg)
+
+In 1980, only 5 kinds of vaccination were used while in 2015, 20 different vaccine were adopted.
 
 ### Things to Determine Before Visualisation
 
@@ -176,9 +261,7 @@ I wanted to use a colour scale to visualise the mortality rates. I had to decide
 
 #### Level of Gradient of Colour on Map
 
-The maximum value of mortality with 1980 and 2015 is 0.3369. It makes sense to divide the data into <u>7 intervals from 0.00 to 0.35</u> and the distribution of mortality rates is as follow:
-
-![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5eu8z66sj30al06pq3f.jpg)
+The maximum value of mortality with 1980 and 2015 is 0.3369. It makes sense to divide the data into <u>7 intervals from 0.00 to 0.35</u>.
 
 After passing the data to D3.js, I got the choropleth map for the mortality rate in 2015 as follow which was satisfactory as the difference between countries was distinguishable.
 
