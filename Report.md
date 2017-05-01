@@ -32,7 +32,7 @@ The third part is the time series plot showing the trends of vaccine coverage an
 
 Vaccine is shown in green and mortality is shown in red. Data points are connected by smooth lines. If there is no data in some years, the line is shown in different segments. When users hover on a data point, a tooltip appears showing the year and data for that point.
 
-## Visualisation Process
+## Development of the Visualisation
 
 ### Data Preparation
 
@@ -92,25 +92,37 @@ Besides, consider the nature of the datasets, mortality data is the number of de
 
 Moreover, I listed out the vaccine adopted by each country and save that to `data/Vaccine_in_Country.json`
 
-#### Things to Determine Before Visualisation
+### Analysis of Data
 
-##### Time Frame
+
+
+### Things to Determine Before Visualisation
+
+#### Language and/or Packages to use
+
+As I had used python to do some manipulation on the data, I could use python with matplotlib. However, as I learned D3.js from lecture, I am more familiar with using D3.js for visualisation. In addition, D3.js is a JavaScript library and can be run on any platform with modern browsers. Therefore, <u>JavaScript and D3.js</u> is used together with other libraries such as <u>jQuery</u> for DOM manipulation and <u>Underscore.js</u> for functional programming with JavaScript objects.
+
+I use <u>Materialize</u> as the front-end framework as it is based on Material Design. It is minimalistic and simple to arrange HTML elements. I also use <u>Font Awesome</u> to display some symbols in the webpage.
+
+#### Time Frame
 
 The aim of the visualisation is to compare between immunisation coverage and child mortality rate. Therefore, I decided to set the time frame as the common period of both data, i.e. <u>between 1980 and 2015</u>.
 
-##### Nature of Colour Scale
+#### Nature of Colour Scale
 
 I wanted to use a colour scale to visualise the mortality rates. I had to decide between a continuous colour scale. This [answer](https://gis.stackexchange.com/a/86679) from StackExchange gave me a clear guide in choosing between the two. A continuous colour scale is a accurate representation of the data but it is sensitive to outliers and human perception to colour is not linear. On the other hand, despite there are data lost in discrete colour scale, it is robust to outliers and the colours can be perceived clearly and distinctly. Therefore, <u>discrete colour scale</u> is used
 
-##### Level of Gradient of Colour on Map
+#### Level of Gradient of Colour on Map
 
 The maximum value of mortality with 1980 and 2015 is 0.3369. It makes sense to divide the data into <u>7 intervals from 0.00 to 0.35</u> and the distribution of mortality rates is as follow:
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5eu8z66sj30al06pq3f.jpg)
 
-After passing the data to D3.js, 
+After passing the data to D3.js, I got the choropleth map for the mortality rate in 2015 as follow which was satisfactory as the difference between countries was distinguishable.
 
-##### Choices of colours
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1fewu5tsu4cj30q20acmyh.jpg)
+
+#### Choices of colours
 
 To tell the story effectively, colours with underlying meanings close to the data itself should be used so that people can intuitively get the message. According to [Color Wheel Pro](http://www.color-wheel-pro.com/color-meaning.html), 
 
@@ -119,3 +131,46 @@ To tell the story effectively, colours with underlying meanings close to the dat
 > Green is the color of nature. It symbolizes growth, harmony, freshness, and fertility. ...
 
 Therefore, I used <u>red</u> to represent mortality data and <u>green</u> to represent vaccine coverage.
+
+#### Typography
+
+Typography should be easy to read so I planned to use sans serif font. The Materialize framework uses Roboto as the default font. Therefore, I use <u>Roboto</u> in the visualisation.
+
+### Prototypes of the Visualisation
+
+#### First Prototype
+
+![](http://ww1.sinaimg.cn/large/006tNbRwgy1fexy6xcayjj31400kb0v3.jpg)
+
+
+
+This is the first prototype of the visualisation. Left hand side was the setting panel and users were allowed to choose country and year to display. Right hand side was to show the details of the country selected. The area below the map was planned to show the vaccination rates across the year. I intended to show everything in one screen without scrolling. However, it is impractical as the map dimensions are in fixed ratio, potentially causing the graph at the bottom to appear too small. Therefore, this prototype was abandoned.
+
+#### Second Prototype
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5ll3r0auj30rf0i3gni.jpg)
+
+This was the second prototype. The map was more or less the same as the final one. When a country was selected, the time series plot appears.
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5jkxd3nej30pt0fa0tc.jpg)
+
+Users can select the vaccine from the dropdown menu and the corresponding graph will be plotted. I found it not effective enough as I think it would be better for user to select a particular vaccine before displaying the graph. This idea led to the final version of my visualisation.
+
+#### Final Visualisation
+
+In the final visualisation, instead of a dropdown menu for vaccine, I displayed all vaccine together with their coverage of the country in donut charts.
+
+![](http://ww3.sinaimg.cn/large/006tNbRwgy1ff5lvdzu9yj30rf0ieju3.jpg)
+
+By making use of the grid framework of Materialize, I can easily add many donut charts and assigning classes to `div` elements. Users can click on a vaccine type to further investigate the adoptin trend of the vaccine over the year. To let the users know they cna select the vaccine by clicking anywhere with the `div` element, I added shadow box effect when user hover the `div` element.
+
+![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5m3delvaj313j0kcac9.jpg)
+
+In the time series plots, I added data points in 
+
+#### Other abandoned ideas
+
+##### Preventable Disease Data
+
+## Reflective Evaluation
+

@@ -258,3 +258,14 @@ MaterializeCSS is used as the webpage framework
 ![](http://ww1.sinaimg.cn/large/006tNbRwgy1fexy6xcayjj31400kb0v3.jpg)
 
 Prototype of the visualisation with MaterializeCSS. Left hand side is the setting panel and allow user to select country to display and on the right  hand side the details of the country selected. The map is in the central panel and the blank space below the map is planned to show the vaccination rate across the year. I planned to show everything in the screen without scrolling. However, I find it impractical as the map dimensions are in fixed ratio and hence only certain width:height ratio of the browser window can show the remaining graph clearly
+
+
+
+
+
+
+
+
+
+
+
