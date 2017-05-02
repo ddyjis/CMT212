@@ -20,6 +20,7 @@
     </svg>
     <!--loading screen end-->
 
+    <!--Navbar-->
     <div class="navbar-fixed">
         <nav>
             <div class="nav-wrapper red lighten-2">
@@ -27,6 +28,7 @@
             </div>
         </nav>
     </div>
+    <!--Navbar end-->
 
     <!--content-->
     <div class="container">
@@ -112,10 +114,12 @@
         var selected_year = "2015";
         var selected_vaccine = "";
 
-
+        // countries with data available
         var ISO_List = ["AFG", "ALB", "DZA", "AND", "AGO", "ATG", "ARG", "ARM", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BTN", "BOL", "BIH", "BWA", "BRA", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CAF", "TCD", "CHL", "CHN", "COL", "COM", "COG", "COK", "CRI", "CIV", "HRV", "CUB", "CYP", "CZE", "PRK", "COD", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "ETH", "FJI", "FIN", "FRA", "GAB", "GMB", "GEO", "DEU", "GHA", "GRC", "GRD", "GTM", "GIN", "GNB", "GUY", "HTI", "HND", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "ISR", "ITA", "JAM", "JPN", "JOR", "KAZ", "KEN", "KIR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LTU", "LUX", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MRT", "MUS", "MEX", "FSM", "MCO", "MNG", "MNE", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NZL", "NIC", "NER", "NGA", "NIU", "NOR", "OMN", "PAK", "PLW", "PAN", "PNG", "PRY", "PER", "PHL", "POL", "PRT", "QAT", "KOR", "MDA", "ROU", "RUS", "RWA", "KNA", "LCA", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SVK", "SVN", "SLB", "SOM", "ZAF", "ESP", "LKA", "SDN", "SUR", "SWZ", "SWE", "CHE", "SYR", "TJK", "THA", "MKD", "TLS", "TGO", "TON", "TTO", "TUN", "TUR", "TKM", "TUV", "UGA", "UKR", "ARE", "GBR", "TZA", "USA", "URY", "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"];
 
+        // draw and update the time series plot
         function plot(data) {
+            // self-created data structure for drawing line and dots for vaccine and under5
             var v_line_data = []
             var v_dot_data = []
             for (var k in data) {
@@ -147,6 +151,8 @@
             plot_y_scale_left.domain([0, 1]);
             plot_y_scale_right.domain(d3.extent(u_line_data, function(d) { return +d.value }));
 
+            // draw under5 first as the square dots for under5 are expected to be displayed 
+            // below circle dots of vaccine in case of intersection
             var lines_under5 = plot_g.selectAll(".under5-line")
                 .data([u_line_data]);
 
@@ -223,7 +229,7 @@
                 .transition().duration(1000)
                 .attr("d", plot_line_vaccine);
 
-
+            // draw vaccine
             var dots_vaccine = plot_g.selectAll(".vaccine-dot")
                 .data(v_dot_data);
 
@@ -273,6 +279,7 @@
                 .call(plot_y_axis_right);
         }
 
+        // draw and update the map
         function draw_map(world) {
             map_projection
                 .scale(1)
@@ -304,6 +311,8 @@
                     } else {
                         selected_country = d.properties.ADM0_A3;
                     }
+                    // selecting a country will trigger change event to dropdown menu and 
+                    // the change event will carry out other functions
                     $("#select-country").val(selected_country);
                     $("#select-country").trigger("change")
                     $("select").material_select(); // update the select in materialcss
@@ -407,6 +416,7 @@
             $('select').material_select();
         }
 
+        // a loading screen is added to tell users to wait until all data are loaded
         function draw_loading() {
             // creating the loading screen
             window_width = $(window).width();
@@ -436,6 +446,7 @@
                 .text("Loading...");
         }
 
+        // initialise the settings of the map
         function initialise_map() {
             // creating the map
             map_width = $("#map").width();
@@ -521,6 +532,7 @@
                 .style("display", "none");
         }
 
+        // initialise the settings of the time series plot
         function initialise_plot() {
             plot_width = $("#vaccine-plot").width();
             plot_height = Math.max(plot_width / 2, $(window).height() - 150);
@@ -605,6 +617,7 @@
                 .style("display", "none")
         }
 
+        // the initialise function which is run at the begin
         function init() {
             draw_loading();    
             initialise_map();
@@ -632,9 +645,10 @@
                 })
         }
 
+        // initialise the whole visualisation
         init();
 
-        // when the year is changed, update the map
+        // when the year is changed, update the map and donut charts
         $("#year").change(function() {
             selected_year = this.value;
             draw_map(world_topo);
@@ -643,6 +657,7 @@
             }
         });
 
+        // draw donut charts
         function draw_pie() {
             $("#pie-title").html("Vaccine Coverage in " + ISO2Name[selected_country] + " in " + selected_year)
             var arc = d3.arc();
@@ -659,7 +674,7 @@
             divs
                 .enter()
                 .append("div")
-                .attr("class", "pie-chart col s6 m4 l3")
+                .attr("class", "pie-chart col s6 m4 l3") // classes in Materialize
                 .attr("id", function(d) { return d + "_coverage" })
                 .html(function(d) { return "<h5 class='center-align'>" + d + "</h5>" })
                 .on("click", function(d) { 
@@ -732,6 +747,7 @@
                 .attr("font-family", "Roboto, Sans Serif")
         }
 
+        // this will carry out updates to visualisation based on user's selection
         $("#select-country").change(function() {
             selected_country = $("#select-country option:selected").val();
             $(".plot").hide();
@@ -754,6 +770,7 @@
             }
         })
 
+        // float button for going to top of the page
         $("#go-to-top").click(function(e) {
             $("html body").animate({ scrollTop: 0}, "swing")
         })
