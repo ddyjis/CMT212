@@ -205,7 +205,7 @@ The median of mortality rate reduced from 0.0750 to 0.0177 which means majority 
 For the vaccine dataset, I computed the numbers of countries that used certain vaccination in 1980 and 2015 as well as the number of countries that had used a vaccine during the period.
 
 ```python
-# find the popularity of each vaccine in 1980, 2015, and over the whole period
+# find the vaccine usage based on each vaccine
 vaccine_distribution_1980 = {}
 for c, v in vaccine.ix[:, 0].dropna().index:
     vaccine_distribution_1980.setdefault(v, 0)
@@ -230,8 +230,11 @@ pp.pprint(vaccine_distribution)
 vaccine_dis_data_1980 = pd.DataFrame(data=list(vaccine_distribution_1980.items())).set_index(0).sort_values(1)
 vaccine_dis_data_2015 = pd.DataFrame(data=list(vaccine_distribution_2015.items())).set_index(0).sort_values(1)
 vaccine_dis_data = pd.DataFrame(data=list(vaccine_distribution.items())).set_index(0).sort_values(1)
+print("In 1980")
 vaccine_dis_data_1980.plot(kind="bar", title="In 1980")
+print("In 2015")
 vaccine_dis_data_2015.plot(kind="bar", title="In 2015")
+print("Over the period")
 vaccine_dis_data.plot(kind="bar", title="Over the period")
 ```
 
@@ -241,7 +244,203 @@ vaccine_dis_data.plot(kind="bar", title="Over the period")
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff6jlzb3bxj30hn0k6jtf.jpg)
 
-In 1980, only 5 kinds of vaccination were used while in 2015, 20 different vaccine were adopted.
+In 1980, only 5 kinds of vaccination were used while in 2015, 20 different vaccine were adopted. Over the whole period, all 194 countries adopted MCV1, DTP3 and Pol3 while JapEnc is the least adopted.
+
+When looking at the usage of vaccine based on each country,
+
+```python
+# find the vaccine used in each country
+vaccine_in_country = {}
+for c, v in vaccine.index:
+    vaccine_in_country.setdefault(c, []).append(v)
+
+v_in_c_file = open("data/Vaccine_in_Country.json", "w")
+v_in_c_file.write(json.dumps(vaccine_in_country))
+v_in_c_file.close()
+
+max = 0
+for c in vaccine_in_country:
+    if len(vaccine_in_country[c]) >= max:
+        max = len(vaccine_in_country[c])
+        print(max, c)
+print("Maximum number of vaccine a country adopt: {0}".format(max))
+
+country_adoption = {}
+for i in range(1, 21):
+    country_adoption.setdefault(i, 0)
+    
+for c in vaccine_in_country:
+    country_adoption[len(vaccine_in_country[c])] += 1
+    
+pp.pprint(country_adoption)
+pd.DataFrame(data=list(country_adoption.items())).set_index(0).plot(kind="bar")
+```
+
+![](http://ww4.sinaimg.cn/large/006tNbRwgy1ff6l2o4vohj30hs0dcjs6.jpg)
+
+It is found that MHL, which stands for Marshall Islands, is the only country that adopted all 20 vaccine. A majority of countries adopted 12 - 16 kinds of vaccination.
+
+To further investigate the data, as the two dataset consist of collections  of time series, I also did testings for time series on the data. Augmented Dickey-Fuller Test is as test for stationarity of a time series. If a time series is stationary, its joint probability distribution does not change over time. In other word, there is no trend present in the time series. I carried out Augmented Dickey-Fuller Test for each data record to test for trends. `statsmodels` is a python library that provides time series analysis tools. The following is the codes I used to check for trends
+
+```python
+# function for testing time series stationarity using Augmented Dickey-Fuller Test
+# it takes in a time series and significant level as parameters
+# it returns boolean value indicating there are trend in the time series or not
+# 
+# adfuller takes a time series data and test if it is stationary or not
+def test_stationarity(timeseries, sig=0.05):
+    dftest = adfuller(timeseries, autolag="AIC")
+    if dftest[0] < dftest[4]["1%"]:
+        return 0.01 <= sig
+    elif dftest[0] < dftest[4]["5%"]:
+        return 0.05 <= sig
+    elif dftest[0] < dftest[4]["10%"]:
+        return 0.10 <= sig
+    else:
+        return False
+    
+# test for stationary of under5 for each country
+under5_sig = []
+for c in under5.index:
+    # extract one record from under5 and convert the data to numeric 
+    # and then interpolate the missing values in between the data
+    # and then remove nan data at the beginning of the time series
+    # this is to prepare the data for the Augmented Dickey-Fuller Test
+    data = under5.ix[c].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
+    have_trend = False
+    # only country with enough record are tested, others are assumed stationary
+    if len(data) > 9:
+        # a list is needed to pass to adfuller but data.values.tolist() gives 
+        # a column instead of a row so use sum(x, []) to convert it to a single list
+        have_trend = test_stationarity(sum(data.values.tolist(), []), 0.05)
+    if have_trend:
+        under5_sig.append(c)
+print("Country with trend in under 5 mortarity rates")
+pp.pprint(under5_sig)
+```
+
+It is found that 78 countries had trend in the mortarity rates and I plotted them on a map in `analysis.html`
+
+![](http://ww3.sinaimg.cn/large/006tNbRwgy1fezels9n3gj31400fzq4x.jpg)
+
+It can be seen that South America, part of Africa and Middle East, Northern Europe and Asia had significant trends, probably declines, in mortality rates. Developed coutries such as the USA, Canada, Australia, European countries does not have trend. This is probably because they already had sophisticated social welfare before the period that keep children healthy. The central part of Africa did not show a trend. These countries were still relatively high in child mortality rates.
+
+Then I tested for trend for each vaccine in each country,
+
+```python
+# test for stationary of each vaccine in each country
+vaccine_sig = {}
+for c, v in vaccine.index:
+    # the structure for vaccine is different as it has 2 indice so the 
+    # syntax here is a little bit different
+    data = vaccine.ix[c].ix[v].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
+    have_trend = False
+    if len(data) > 9:
+        have_trend = test_stationarity(sum(data.values.tolist(), []), 0.05)
+    if have_trend:
+        vaccine_sig.setdefault(c, []).append(v)
+print("Vaccine introduced in each country")
+pp.pprint(vaccine_sig)
+```
+
+166 countries showed trends in the vaccine coverage. These could be an indicator of a country started to use that vaccine between 1980 and 2015.
+
+Last but not least, I tested for the relationship between the two collections of time series. After reading this [blog](https://svds.com/avoiding-common-mistakes-with-time-series/), I decided to use Granger Causality Tests instead of correlation to test for relationship between vaccine adoption and child mortality. This is because once there is trends in the two time series, even the trend is small, the resulting correlation could be very high. Pearson correlation is not a good measure for the relationship between time series. Granger Causality is a kind of "artificial" causality. If a time series $X_1$ statistically predicts another time series $X_2$, $X_1$ is said to be Granger-causes $X_2$. Granger Causality is not true causality but it provides a statistical measure to reveal the relationship of two time series.
+
+The following are the codes to test for Granger Causality
+
+```python
+# function for removing trend pattern if the time series is not stationary
+def detrend(x, y):
+    model = LinearRegression()
+    model.fit(x, y)
+    trend = model.predict(x)
+    return [y[i] - trend[i] for i in range(len(y))]
+
+# check if the two data ISO code are inconsistent
+for c, v in vaccine.index:
+    if c not in under5.index:
+        print(c)
+        
+# check granger causality
+vaccine_granger_cause = []
+
+for c, v in vaccine.index:
+    # get data the way same as above, u for under5 and v for vaccine
+    v_data = vaccine.ix[c].ix[v].to_frame().apply(pd.to_numeric, errors="coerce")[v].interpolate().dropna().to_frame()
+    u_data = under5.ix[c].to_frame().apply(pd.to_numeric, errors="coerce").interpolate().dropna()
+
+    # get only the common years of results
+    length = min(len(u_data), len(v_data))
+    u_data = u_data[-length:]
+    v_data = v_data[-length:]
+
+    # test if the time series have trend in them
+    v_has_trend = False
+    if len(v_data) > 9:
+        v_has_trend = test_stationarity(sum(v_data.values.tolist(), []), 0.05)
+    u_has_trend = False
+    if len(u_data) > 9:
+        u_has_trend = test_stationarity(sum(u_data.values.tolist(), []), 0.05)
+    
+    # remove trend and make stationary time series for granger causality test
+    if v_has_trend:
+        x = [int(i) for i in v_data.index]
+        x = numpy.reshape(x, (len(x), 1))
+        y = v_data.values
+        y = numpy.reshape(y, (len(y), 1))
+        v_detrend = detrend(x, y)
+        v_detrend = [float(i) for i in v_detrend]
+    else:
+        v_detrend = [float(i) for i in v_data.values]
+    if u_has_trend:
+        x = [int(i) for i in u_data.index]
+        x = numpy.reshape(x, (len(x), 1))
+        y = u_data.values
+        y = numpy.reshape(y, (len(y), 1))
+        u_detrend = detrend(x, y)
+        u_detrend = [float(i) for i in u_detrend]
+    else:
+        u_detrend = [float(i) for i in u_data.values]
+
+    d = {"Under5": u_detrend, "Vaccine": v_detrend}
+    try:
+        # grangercausalitytests test if the second time series "granger-cause" the first one
+        # it takes at least 2 parameters: data and maxlag
+        # data should contain exactly two time series of the same length
+        # maxlag states the maximum lag between the two time series
+        # 
+        # grangercausalitytests contains 4 statistical tests to test if past values of the
+        # second series has statistically significant effect on current value of the first series
+        max_lag = 6
+        test = gctest(pd.DataFrame(data=d), max_lag, verbose=False)
+        # lags stores the possible number of lags with average p-value less than 0.05
+        lags = []
+        for lag in test:
+            average_p = 0
+            for k in test[lag][0]:
+                average_p += test[lag][0][k][1]/4
+            if average_p < 0.05:
+                lags.append(lag)
+        if max(lags) < max_lag:
+            vaccine_granger_cause.append(tuple([c, v, max(lags)]))
+    except ValueError:
+        pass
+
+# show the results
+country_improved = {}
+vaccine_count = {k: 0 for k in list(vaccine.index.levels[1])}
+for c, v, l in vaccine_granger_cause:
+    country_improved.setdefault(c, []).append(v)
+    vaccine_count[v] += 1
+print("Country with mortarity rate 'Granger caused'")
+pp.pprint(country_improved)
+print(len(country_improved))
+print("Counts of vaccine that 'Granger caused' change in mortarity")
+pp.pprint(vaccine_count)
+```
+
+It is found that 165 countries had their child mortality 'Granger-caused' by various kinds of vaccine. Out of the 20 vaccines, BCG, DTP3, HepB3, MCV1, Pol3 and TT2Plus 'Granger-caused' changes in child mortality rates in more than 10 countries. This suggests these vaccine could be the factor that improves child survival rates. It should be reminded that vaccine could be a factor that reduce child mortality. There could be other factors that improves child survival or factors that affects both vaccine coverage and children health.
 
 ### Things to Determine Before Visualisation
 
@@ -289,7 +488,11 @@ Typography should be easy to read so I planned to use sans serif font. The Mater
 
 
 
-This is the first prototype of the visualisation. Left hand side was the setting panel and users were allowed to choose country and year to display. Right hand side was to show the details of the country selected. The area below the map was planned to show the vaccination rates across the year. I intended to show everything in one screen without scrolling. However, it is impractical as the map dimensions are in fixed ratio, potentially causing the graph at the bottom to appear too small. Therefore, this prototype was abandoned.
+This is the first prototype of the visualisation. 
+
+Left hand side was the setting panel and users were allowed to choose country and year to display. I used the dropdown menu as well as the range input from Materialize to give a clean Material Design look. For the play function, I manipulated the events and values of the range input using jQuery. Both `change` and `input` events can update the map when user move the slider. `input` allows updating without releasing the mouse, but it is not support in IE. There is a trade-off between compatibility and efficiency in visualisation. In the end, I chose to use `change` for better compatibility. Right hand side was to show the details of the country selected. The area below the map was planned to show the vaccination rates across the year. 
+
+I intended to show everything in one screen without scrolling. However, it is impractical as the map dimensions are in fixed ratio, potentially causing the graph at the bottom to appear too small. Therefore, the structure of this prototype was abandoned but the dropdown and the slider was kept.
 
 #### Second Prototype
 
@@ -325,5 +528,24 @@ I also added a floating button at the lower right corner for users to quickly go
 
 ##### Preventable Disease Data
 
+At the beginning I also got the data for incidence for vaccine-preventable disease. I planned to show how vaccine can prevent people suffering from diseases. However, when I further investigate the relationship between vaccine and those diseases, I found that there are many-to-many relationships between them. Some vaccines are targeted at several diseases and some diseases could be prevented by several vaccines. Together with mortality data, the relationships are too complicated to visualise. Therefore, I only used 2 datasets.
+
 ## Reflective Evaluation
+
+### Strength of my work
+
+- All my visualisations are interactive. Users can hover on the map and the time series plot for further information. This helps users more easily understand the data.
+- There are hierarchy in the visualisation. Users reveals more detailed information as they go along each steps. When data changes in the map, the pie charts are updated and the plots are hided to prevent confusion.
+- The visualisation follows simplistic design. By increasing the data:ink ratio, data is delivered with minimum of extra ink that distract audiences. 
+
+### Weakness of my work
+
+- The animation of the map updates at fixed interval. I have asked others to evaluate my work and they had different opinions to this function. Some of them wanted the updating to slow down so as to have longer time to observe the changes of each country while others wanted it to be faster so that the changes across a longer time are more obvious. What I could do is to allow users to manually adjust the speed with the slider.
+- Only one vaccine can be compared to the mortality. More vaccine should be allowed to compare as a particular is probably not the only factor that affect mortality rates. However, a plot with 21 time series is too complex to delivery information. Perhaps I could allow users to pick several vaccines but the maximum number of vaccine that can be selected required further investigation.
+
+### Reflection on my learning
+
+Before doing this project, I thought what I learned from lecture was enough for me to finish the task. However, after going through the challenges, I realised that what I know was very little. With the help of Google, StackOverflow and the codes from bl.ocks.org, I acquired the information I needed to complete the task.
+
+While doing the coursework, I learned how to carry out data cleansing such as removing `NaN` values, interpolating missing data using pandas. I had experience in data analysis including getting summaries of datasets, using libraries to carry out statistical tests for datasets. I understood more about time series analysis. I also realised that the trade-off between compatibility and visual efficiency is also a concern in visualisation. In addition, I learned how to visualise data in browsers using D3.js and how to use Chrome inspector to debug JavaScript codes.
 
