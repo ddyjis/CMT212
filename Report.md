@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This visualisation intends to explore the relationship between vaccine coverage and the mortality rates of children under 5 years old. 
+This visualisation intends to explore the relationship between vaccine coverage and the mortality rates of children under 5 years old. This project is also available on [GitHub](https://github.com/ddyjis/CMT212)
 
 ### Datasets
 
@@ -14,19 +14,19 @@ This visualisation intends to explore the relationship between vaccine coverage 
 
 ### Visualisation
 
-My visualisation use D3.js v4 combined with jQuery and underscore.js. It consists of 3 parts. The first part is a world map showing the mortality rates across the globe.
+My visualisation use D3.js v4 combined with jQuery and underscore.js. It consists of 3 parts. The first part is a <u>world map</u> showing the <u>mortality rates</u> across the globe.
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff52cksov1j30rr0j5ac7.jpg)
 
-The mortality rate is represented by different gradients of red. Countries that have no data are represented in pale white. Users can hovor the countries and a tooltip showing the country name and the mortality rate will appear. There is also a slider for users to select the year. When users press the play button, the year will increase in regular interval so as to visualise the changes in child mortality over time. Audience can select a country to investigate from the dropdown list or by clicking the country on the map.
+The mortality rate is represented by different gradients of red. Countries that have no data are represented in pale white. Users can hovor the countries and a tooltip showing the country name and the mortality rate will appear. There is also a slider for users to select the year. When users press the <u>play button</u>, the year will increase in regular interval so as to visualise the changes in child mortality over time. Audience can <u>select a country to investigate</u> from the dropdown list or by clicking the country on the map.
 
-The second part is a grid of donut charts. When a country is selected, the page is scrolled to these charts. 
+The second part is a grid of <u>donut charts</u>. When a country is selected, the page is scrolled to these charts. 
 
 ![](http://ww1.sinaimg.cn/large/006tNbRwgy1ff52ek6z1bj30qx0jcjty.jpg)
 
-Each of these donut charts show the corresponding vaccine coverage of the selected country. If the country never adopted a certain vaccine, the vaccine is not shown. If no data is available for that vaccine in that year, there will be a "No data" statement instead of a donut chart. Users can choose a vaccine by a mouse click.
+Each of these donut charts show the corresponding <u>vaccine coverage</u> of the selected country. If the country never adopted a certain vaccine, the vaccine is not shown. If no data is available for that vaccine in that year, there will be a "No data" statement instead of a donut chart. Users can choose a vaccine by a mouse click.<div style="page-break-after: always;"></div>
 
-The third part is the time series plot showing the trends of vaccine coverage and child death rate over time.
+The third part is the <u>time series plot</u> showing the trends of <u>vaccine coverage</u> and <u>child death rate</u> over time.
 
 ![](http://ww3.sinaimg.cn/large/006tNbRwgy1ff52zf0rdzj30rh0hvdi0.jpg)
 
@@ -40,7 +40,7 @@ Vaccine coverage is shown in green and mortality rate is shown in red. Data poin
 
 Raw dataset from the source are in `data/Raw`  in Excel spreadsheet format. I manually converted them to CSV format. They were then pre-processed using Pandas. Complete code for preparation can be seen in `preprocessing.py` and comments in `index.html`. Code explanation:
 
-Since the data are from different sources, I need to find the common ISO codes between the datasets. 
+Since the data are from different sources, I need to <u>find the common ISO codes between the datasets</u>. 
 
 ```python
 %matplotlib notebook
@@ -83,7 +83,7 @@ There were 194 countries in common and they were outputted to `data/Pre-processi
 
 #### Geo Data
 
-With reference to this [blog](http://www.tnoda.com/blog/2013-12-07), I converted the shapefile to TopoJSON format which could be easily passed to JavaScript. I create my own TopoJSON from shapefile instead of using pre-existing JSON files because I have higher freedom in manipulating the JSON file like I can exclude Anatartica during convertion using the code
+With reference to this [blog](http://www.tnoda.com/blog/2013-12-07), I converted the shapefile to TopoJSON format which could be easily passed to JavaScript. I <u>create my own TopoJSON</u> from shapefile instead of using pre-existing JSON files because I have higher freedom in manipulating the JSON file like I can exclude Anatartica during convertion using the code
 
 ```bash
 ogr2ogr -f GeoJSON -where "su_a3 <> 'ATA'" countries.json ne_10m_admin_0_map_units.shp
@@ -92,7 +92,7 @@ geo2topo -o countries.topo.json countries.json
 
 The TopoJSON generated was 19.3 MB which was not appropriate for webpages. I used [mapshaper](http://www.mapshaper.org/) to simplify the geo data and the resulting TopoJSON file was reduced to 676 KB which was acceptable for web.
 
-There were many attributes associated with the shapes. I tried `ISO_A3` and `ADM0_A3` as the id of each shape. `ISO_A3` considered UK as 4 different regions and neither of each matched with the ISO code of the UK. `ADM0_A3` considered the UK as the same region but some countries in Africa do not match with the ISO code. In the end, I used `ADM0_A3` field as the id and manually modify the mismatching fields.
+There were many attributes associated with the shapes. I tried `ISO_A3` and `ADM0_A3` as the id of each shape. `ISO_A3` considered UK as 4 different regions and neither of each matched with the ISO code of the UK. `ADM0_A3` considered the UK as the same region but some countries in Africa do not match with the ISO code. In the end, I used `ADM0_A3` <u>field as the id</u> and manually modify the mismatching fields.
 
 Then I matched the ISO codes in TopoJSON with ISO codes from dataset using the following code
 
@@ -139,7 +139,7 @@ ISO2Name_File.write(json.dumps(ISO2Names))
 ISO2Name_File.close()
 ```
 
-Besides, consider the nature of the datasets, mortality data is the number of deaths per 1000 children before 5 while vaccine coverage data is the percentage of adoption. I standardise both datasets and prepare them for JavaScript to read.
+Besides, consider the nature of the datasets, mortality data is the number of deaths per 1000 children before 5 while vaccine coverage data is the percentage of adoption. I <u>standardise both datasets</u> and prepare them for JavaScript to read.
 
 ```python
 # standardise data and arrange columns in increasing order for JavaScript to read
@@ -163,7 +163,7 @@ Now the data is ready for analysis and visualisation. They are output to `data/u
 
 The complete code for analysis can be found in `data-analysis.py`. 
 
-The aim of this visualisation is to show the relationship between immunisation coverage and child mortality rate. First, I analysed the datasets separately.
+The aim of this visualisation is to show the relationship between immunisation coverage and child mortality rate. First, I <u>analysed the datasets separately</u>.
 
 ```python
 # read in the dataset
@@ -190,9 +190,9 @@ Median of mortality rate in 1980: 0.0750
 Median of mortality rate in 2015: 0.0177
 ```
 
-The two histograms above shows the distribution of mortality rates in the world in 1980 and 2015 respectively. They are plotted with the same scales in x-axis and y-axis. It can be seen that children survival got much improved in that 35 years. The whole distribution shifted to the left with higher peak. It can also be seen that country with the worst situation had reduced the mortality rate by at least half.
+The two <u>histograms</u> above shows the distribution of mortality rates in the world in 1980 and 2015 respectively. They are plotted with the same scales in x-axis and y-axis. It can be seen that children <u>survival got much improved</u> in that 35 years. The whole distribution shifted to the left with higher peak. It can also be seen that country with the worst situation had reduced the mortality rate by at least half.
 
-The median of mortality rate reduced from 0.0750 to 0.0177 which means majority of countries have their child survivor rates improved.
+The <u>median</u> of mortality rate reduced from 0.0750 to 0.0177 which means majority of countries have their child survivor rates improved.
 
 For the vaccine dataset, I computed the number of countries that used certain vaccine in 1980 and 2015 as well as the number of countries that had used a vaccine during the period.
 
@@ -230,7 +230,7 @@ vaccine_dis_data.plot(kind="bar", title="Over the period")
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff6jlzb3bxj30hn0k6jtf.jpg)
 
-In 1980, only 5 types of vaccine were used, while in 2015, 20 different vaccine were adopted. Over the whole period, all 194 countries adopted MCV1, DTP3 and Pol3 while JapEnc is the least adopted.
+In 1980, only <u>5 types of vaccine</u> were used, while in 2015, <u>20 types of vaccine</u> were adopted. Over the whole period, <u>all</u> 194 countries adopted <u>MCV1, DTP3 and Pol3</u> while <u>JapEnc is the least</u> adopted.
 
 When looking at the usage of vaccine based on each country,
 
@@ -259,9 +259,9 @@ pd.DataFrame(data=list(country_adoption.items())).set_index(0).plot(kind="bar")
 
 ![](http://ww4.sinaimg.cn/large/006tNbRwgy1ff6l2o4vohj30hs0dcjs6.jpg)
 
-It is found that MHL (Marshall Islands), is the only country that adopted all 20 vaccine. A majority of countries adopted 12 - 16 types of vaccine.
+It is found that MHL (Marshall Islands), is the only country that adopted all 20 vaccine. A majority of countries adopted <u>12 - 16 types of vaccine</u>.
 
-To further investigate the data, as the two datasets consist of collections of time series, I also did testings for time series on the data. Augmented Dickey-Fuller Test is the test for stationarity of a time series. If a time series is stationary, its joint probability distribution does not change over time. In other words, there is no trend present in the time series. I carried out Augmented Dickey-Fuller Test for records in the two datasets for mortality trends as well as the vaccine adoption trends. `statsmodels` is a python library that provides time series analysis tools. The following is the codes I used:
+To further investigate the data, as the two datasets consist of collections of time series, I also did <u>testings for time series</u> on the data. Augmented Dickey-Fuller Test is the test for <u>stationarity</u> of a time series. If a time series is stationary, its joint probability distribution does not change over time. In other words, there is no trend present in the time series. I carried out Augmented Dickey-Fuller Test for records in the two datasets for mortality trends as well as the vaccine adoption trends. `statsmodels` is a python library that provides time series analysis tools. The following is the codes I used:
 
 ```python
 # function for testing time series stationarity using Augmented Dickey-Fuller Test
@@ -293,11 +293,11 @@ print("Country with trend in under 5 mortarity rates")
 pp.pprint(under5_sig)
 ```
 
-It is found that 78 countries had trend in the mortarity rates and I plotted them on a map in `analysis.html`
+It is found that <u>78 countries had trend in the mortarity rates</u> and I plotted them on a map in `analysis.html`
 
 ![](http://ww3.sinaimg.cn/large/006tNbRwgy1fezels9n3gj31400fzq4x.jpg)
 
-It can be seen that South America, part of Africa and Middle East, Northern Europe and Asia had significant trends, probably declines, in mortality rates. Developed countries such as the those in North America and Europe showed no trends. This is could be explained by their sophisticated social welfare before the period that keep children healthy so their trends were steady. The central part of Africa did not show a trend. These countries were still relatively high in child mortality rates in 2015.
+It can be seen that South America, part of <u>Africa and Middle East, Northern Europe and Asia</u> had <u>significant trends</u>, probably declines, in mortality rates. Developed countries such as the those in <u>North America and Europe showed no trends</u>. This is could be explained by their sophisticated social welfare before the period that keep children healthy so their trends were steady. The <u>central part of Africa did not show a trend</u>. These countries were still relatively high in child mortality rates in 2015.
 
 Then I tested for trend of each vaccine in each country,
 
@@ -315,9 +315,9 @@ print("Vaccine introduced in each country")
 pp.pprint(vaccine_sig)
 ```
 
-166 countries showed trends in the vaccine coverage. These could be an indicator of a country started to use that vaccine between 1980 and 2015.
+<u>166 countries showed trends in the vaccine coverage</u>. These could be an indicator of a country started to use that vaccine between 1980 and 2015.
 
-Last but not least, I tested for the relationship between the two collections of time series. After reading this [blog](https://svds.com/avoiding-common-mistakes-with-time-series/), I decided to use Granger Causality Tests instead of correlation to test for relationship between vaccine adoption and child mortality. This is because once there are trends in the two time series, even the trend is small, the resulting correlation could be very high. Pearson correlation is not a good measure for the relationship between time series. Granger Causality is a kind of "artificial" causality. If a time series $X_1$ statistically predicts another time series $X_2$, $X_1$ is said to be Granger-causing $X_2$. Granger Causality is not true causality but it provides a statistical measure to reveal the relationship of two time series.
+Last but not least, I tested for the <u>relationship between the two collections of time series</u>. After reading this [blog](https://svds.com/avoiding-common-mistakes-with-time-series/), I decided to use <u>Granger Causality Tests</u> instead of correlation to test for relationship between vaccine adoption and child mortality. This is because once there are trends in the two time series, even the trend is small, the resulting <u>correlation could be very high. Pearson correlation is not a good measure</u> for the relationship between time series. Granger Causality is a kind of "artificial" causality. If a time series $X_1$ statistically predicts another time series $X_2$, $X_1$ is said to be Granger-causing $X_2$. Granger Causality is not true causality but it provides a statistical measure to reveal the relationship of two time series.<div style="page-break-after: always;"></div>
 
 The following are the codes to test for Granger Causality
 
@@ -406,7 +406,9 @@ print("Counts of vaccine that 'Granger caused' change in mortarity")
 pp.pprint(vaccine_count)
 ```
 
-It is found that 165 countries had their child mortality 'Granger-caused' by various kinds of vaccine. Among the 20 vaccines, BCG, DTP3, HepB3, MCV1, Pol3 and TT2Plus 'Granger-caused' changes in child mortality rates in more than 10 countries. This suggests these vaccine could be the factor that improves child survival rates. It should be reminded that vaccine could be a factor that reduce child mortality. There could be other factors that improves child survival or factors that affects both vaccine coverage and children health.
+It is found that <u>165 countries</u> had their child mortality 'Granger-caused' by various kinds of vaccine. Among the 20 vaccines, <u>BCG, DTP3, HepB3, MCV1, Pol3 and TT2Plus</u> 'Granger-caused' changes in child mortality rates in more than 10 countries. This suggests these vaccine could be the factor that improves child survival rates. 
+
+It should be reminded that vaccine could be a factor that reduce child mortality. There could be other factors that improves child survival or factors that affects both vaccine coverage and children health.
 
 ### Things to Determine Before Visualisation
 
@@ -416,13 +418,7 @@ As I had used python to do some manipulation on the data, I could use python wit
 
 I use <u>Materialize</u> as the front-end framework as it is based on Material Design. It is minimalistic and simple to arrange HTML elements. I also use <u>Font Awesome</u> to display some symbols in the webpage.
 
-#### Necessity of a map
-
-My datasets contain data across the world. It is intuitive to visualise them on a map. However, is the location matter in telling the story? Which dataset should be shown on a map? Will a 2D scatter plot or bar charts enough to deliver the message?
-
-The objective of my visualisation is to investigate the effectiveness of vaccine in saving children's lives. If I visualise the data on a map, it would be better to show the problem, i.e. under 5 mortality rates, on it and allow audience further dive in to the potential causes, i.e. vaccine coverage, of current situation. Therefore, <u>child mortality rates are shown on the map</u>. 
-
-It is expected mortality rates to be lower in developed countries than that of developing countries. These two types of countries are geographically distributed. Visualising on a map can <u>show the distribution across the globe</u>.
+#### 
 
 #### Time Frame
 
@@ -452,7 +448,7 @@ Therefore, I used <u>red</u> to represent mortality data and <u>green</u> to rep
 
 #### Typography
 
-Typography should be easy to read so I planned to use sans serif fonts. The Materialize framework uses Roboto as the default font. Therefore, I use <u>Roboto</u> in the visualisation for consistence.
+Typography should be easy to read so I planned to use sans serif fonts. The Materialize framework uses Roboto as the default font. Therefore, I use <u>Roboto</u> in the visualisation for consistence.<div style="page-break-after: always;"></div>
 
 ### Prototypes of the Visualisation
 
@@ -464,9 +460,9 @@ Typography should be easy to read so I planned to use sans serif fonts. The Mate
 
 This is the first prototype of the visualisation. 
 
-Left hand side was the setting panel and users were allowed to choose which country and year to display. I used the dropdown menu as well as the range input from Materialize to give a clean Material Design look. For the play function, I manipulated the events and values of the range input using jQuery. Both `change` and `input` events can update the map when users move the slider. `input` allows updating without releasing the mouse, but it is not support in IE. There is a trade-off between compatibility and efficiency in visualisation. In the end, I chose to use `change` for better compatibility. Right hand side was to show the details of the country selected. The area below the map was planned to show the vaccination rates across the year. 
+<u>Left hand side</u> was the setting panel and users were allowed to choose which country and year to display. I used the <u>dropdown menu</u> as well as the <u>range input</u> from Materialize to give a clean Material Design look. For the play function, I manipulated the events and values of the range input using jQuery. Both `change` and `input` events can update the map when users move the slider. `input` allows updating without releasing the mouse, but it is not support in IE. There is a <u>trade-off</u> between compatibility and efficiency in visualisation. In the end, I chose to use `change` for better compatibility. <u>Right hand side</u> was to show the details of the country selected. The <u>area below the map</u> was planned to show the vaccination rates across the year. 
 
-I intended to show everything in one screen without scrolling. However, it is impractical as the map dimensions are in fixed ratio, potentially causing the graph at the bottom to appear too small. Therefore, the structure of this prototype was abandoned but the dropdown and the slider was kept.
+I intended to show everything <u>in one screen</u> without scrolling. However, it is impractical as the map dimensions are in fixed ratio, potentially causing the graph at the bottom to appear too small. Therefore, the structure of this prototype was abandoned but the <u>dropdown and the slider were kept</u>.<div style="page-break-after: always;"></div>
 
 #### Second Prototype
 
@@ -476,7 +472,7 @@ This was the second prototype. The map was more or less the same as the final on
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5jkxd3nej30pt0fa0tc.jpg)
 
-Users can select the vaccine from the dropdown menu and the corresponding graph will be plotted. I found it not effective enough as I think it would be better for user to select a particular vaccine before displaying first vaccine on the list. This idea led to the final version of my visualisation.
+Users can select the vaccine from the dropdown menu and the corresponding graph will be plotted. I found it not effective enough as I think it would be better for <u>user to select a particular vaccine</u> instead of automatically displaying the first vaccine on the list. This idea led to the final version of my visualisation.
 
 #### Final Visualisation
 
@@ -484,44 +480,44 @@ In the final visualisation, instead of a dropdown menu for vaccine, I displayed 
 
 ![](http://ww3.sinaimg.cn/large/006tNbRwgy1ff5lvdzu9yj30rf0ieju3.jpg)
 
-By making use of the grid framework of Materialize, I can easily add many donut charts by assigning classes to `div` elements. Users can click on a vaccine type to further investigate the adoption trend over the year. To let the users know they can select the vaccine by clicking the `div` element, I added shadow box effect when user hover it.
+By making use of the grid framework of Materialize, I can easily add many donut charts by assigning classes to `div` elements. Users can <u>click on a vaccine type to further investigate</u> the adoption trend over the year. To let the users know they can select the vaccine by clicking the `div` element, I added shadow box effect when user hover it.
 
 ![](http://ww2.sinaimg.cn/large/006tNbRwgy1ff5m3delvaj313j0kcac9.jpg)
 
 In the time series plots, I added data points to both series. When users hover on the data points, details such as the year and rate appear in a tooltip. The scale for vaccine coverage is fixed to show whether there is a high or low adoption rate. The scale for mortality rate depends on the maximum mortality rate between 1980 and 2015. This scale changes so that it can reflect the changes during that time and hence audience can infer on the potential effects of vaccines.
 
-Coverage is represented by circles and is displayed above mortality rate which represented by squares. This arrangement is used because users are allowed to hover both data when the two data intersect as illustrated below
+Coverage is represented by circles and is displayed above mortality rate which represented by squares. This arrangement is used because users are allowed to hover both data when the <u>two data intersect</u> as illustrated below
 
 ![](http://ww3.sinaimg.cn/large/006tNbRwgy1ff62ilhkm7j307h04smxc.jpg)
 
 ![](http://ww1.sinaimg.cn/large/006tNbRwgy1ff62i50nhyj308504s74h.jpg)
 
-I also added a floating button at the lower right corner for users to quickly going back to the top of the page and select another country. When users select another country, a new set of donut charts is rendered but the time series plot will be hidden. This is because previously selected vaccine may not be adopted in newly selected country. To prevent users' confusion for the absence of data, I hide the plot and require users to select a vaccine again.
+I also added a floating button at the lower right corner for users to quickly going back to the top of the page and select another country. When users select another country, a new set of donut charts is rendered but the time series plot will be hidden. This is because previously selected vaccine may not be adopted in newly selected country. To <u>prevent users' confusion</u> for the absence of data, I hide the plot and require users to select a vaccine again.
 
 #### Other abandoned ideas
 
 ##### Preventable Disease Data
 
-At the beginning I also got the data for incidence for vaccine-preventable diseases. I planned to show how vaccine can prevent people suffering from diseases. However, when I further investigate the relationship between vaccines and those diseases, I found that there are many-to-many relationships between them. Some vaccines are targeted at several diseases and some diseases could be prevented by several vaccines. Together with mortality data, the relationships are too complicated to visualise. Therefore, I only used 2 datasets.
+At the beginning I also got the data for <u>incidence for vaccine-preventable diseases</u>. I planned to show how vaccine can prevent people suffering from diseases. However, when I further investigate the relationship between vaccines and those diseases, I found that there are many-to-many relationships between them. Some vaccines are targeted at several diseases and some diseases could be prevented by several vaccines. Together with mortality data, the relationships are <u>too complicated to visualise</u>. Therefore, I only used 2 datasets.<div style="page-break-after: always;"></div>
 
 ## Reflective Evaluation
 
 ### Strength of my work
 
-- All my visualisations are interactive. Users can hover on the map and the time series plot for further information. This helps users understand the data more easily .
-- There are hierarchies in the visualisation. Users can reveal more detailed information as they go along each steps. When data changes in the map, the donut charts are updated and the plots are hidden to prevent confusion.
-- The visualisation follows simplistic design. By increasing the data:ink ratio, data is delivered with minimum of extra ink that distract audiences. 
+- All my visualisations are <u>interactive</u>. Users can hover on the map and the time series plot for further information. This helps users understand the data more easily .
+- There are <u>hierarchies</u> in the visualisation. Users can reveal more detailed information as they go along each steps. When data changes in the map, the donut charts are updated and the plots are hidden to prevent confusion.
+- The visualisation follows <u>simplistic</u> design. By increasing the data:ink ratio, data is delivered with minimum of extra ink that distract audiences. 
 
 ### Weakness of my work
 
-- The animation of the map updates at fixed interval. I have asked others to evaluate my work and they had different opinions to this function. Some of them wanted the updating to slow down so as to have longer time to observe the changes of each country while others wanted it to be faster so that the changes across a longer time are more obvious. What I could do is to allow users to manually adjust the speed with the slider.
-- Only one vaccine can be compared to the mortality. More vaccine should be allowed to compare at a time as one vaccine maybe only part of the factors that affect mortality rates. However, a plot with 21 time series is too complex to delivery information. Perhaps I could allow users to pick several vaccines but the maximum number of vaccines that can be selected required further investigation.
+- The <u>animation</u> of the map updates at <u>fixed time interval</u>. I have asked others to evaluate my work and they had different opinions to this function. Some of them wanted the updating to slow down so as to have longer time to observe the changes of each country while others wanted it to be faster so that the changes across a longer time are more obvious. What I could do is to allow users to <u>manually adjust</u> the speed with the slider.
+- Only <u>one vaccine</u> can be compared to the mortality. More vaccine should be allowed to compare at a time as one vaccine maybe only part of the factors that affect mortality rates. However, a plot with 21 time series is too complex to delivery information. Perhaps I could allow users to pick several vaccines but the maximum number of vaccines that can be selected required <u>further investigation</u>.
 
 ### Reflection on my learning
 
 Before doing this project, I thought what I learned from lecture was enough for me to finish the task. However, after going through the challenges, I realised that what I know was very little. With the help of Google, StackOverflow and the codes from bl.ocks.org, I acquired the information I needed to complete the task.
 
-While doing the coursework, I learned how to carry out data cleansing such as removing `NaN` values, interpolating missing data using pandas. I had experience in data analysis including getting summaries of datasets, using libraries to carry out statistical tests for datasets. I understood more about time series analysis. I also realised that the trade-off between compatibility and visual efficiency is also a concern in visualisation. In addition, I learned how to visualise data in browsers using D3.js and how to use Chrome inspector to debug JavaScript codes.
+While doing the coursework, I learned how to carry out <u>data cleansing</u> such as removing `NaN` values, interpolating missing data using pandas. I had experience in <u>data analysis</u> including getting summaries of datasets, using libraries to carry out statistical tests for datasets. I understood more about <u>time series analysis</u>. I also realised that the <u>trade-off</u> between <u>compatibility</u> and <u>visual efficiency</u> is also a concern in visualisation. In addition, I learned how to <u>visualise data</u> in browsers using D3.js and how to use Chrome inspector to <u>debug</u> JavaScript codes.
 
 Overall, this is a meaningful project and I learned a lot from doing it. I am sure I can do better if I were to do similar project again.
 

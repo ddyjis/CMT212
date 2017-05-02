@@ -1,28 +1,97 @@
 import pandas as pd
 import numpy
 import pprint
+import json
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stattools import grangercausalitytests as gctest
 from sklearn.linear_model import LinearRegression
 
+# for pretty-printing dictionaries
 pp = pprint.PrettyPrinter(indent=4)
 
 # read in the dataset
 under5 = pd.read_csv("data/under5.csv")
 vaccine = pd.read_csv("data/vaccine.csv")
-
 under5 = under5.set_index("ISO Code")
 vaccine = vaccine.set_index(["ISO_code", "Vaccine"]).sort_index(level="ISO_code")
 
-# select only data from 1980 to 2015 and reverse of order of vaccine 
-# in accending order of year
+# select only data from 1980 to 2015
 under5 = under5.iloc[:, list(range(30,66))]
-vaccine = vaccine.iloc[:, list(range(35, -1, -1))]
-vaccine = vaccine[vaccine.columns[::-1]]
+
+###############################
+# test for individual dataset #
+###############################
+
+# plot the change in mortality rates distribution between 1980 and 2015 under the same x and y axis
+under5.iloc[:, [0, 35]].hist(grid=False, sharex=True, sharey=True, layout=(2,1))
+
+# medians of mortality rates
+print("Median of mortality rate in 1980: {0:.4f}".format(under5.ix[:, 0].dropna().median()))
+print("Median of mortality rate in 2015: {0:.4f}".format(under5.ix[:, -1].dropna().median()))
+
+# find the vaccine usage based on each vaccine
+vaccine_distribution_1980 = {}
+for c, v in vaccine.ix[:, 0].dropna().index:
+    vaccine_distribution_1980.setdefault(v, 0)
+    vaccine_distribution_1980[v] += 1
+
+vaccine_distribution_2015 = {}
+for c, v in vaccine.ix[:, -1].dropna().index:
+    vaccine_distribution_2015.setdefault(v, 0)
+    vaccine_distribution_2015[v] += 1
+    
+vaccine_distribution = {}
+for c, v in vaccine.index:
+    vaccine_distribution.setdefault(v, 0)
+    vaccine_distribution[v] += 1
+
+print("In 1980")
+pp.pprint(vaccine_distribution_1980)
+print("In 2015")
+pp.pprint(vaccine_distribution_2015)
+print("Over the period")
+pp.pprint(vaccine_distribution)
+vaccine_dis_data_1980 = pd.DataFrame(data=list(vaccine_distribution_1980.items())).set_index(0).sort_values(1)
+vaccine_dis_data_2015 = pd.DataFrame(data=list(vaccine_distribution_2015.items())).set_index(0).sort_values(1)
+vaccine_dis_data = pd.DataFrame(data=list(vaccine_distribution.items())).set_index(0).sort_values(1)
+print("In 1980")
+vaccine_dis_data_1980.plot(kind="bar", title="In 1980")
+print("In 2015")
+vaccine_dis_data_2015.plot(kind="bar", title="In 2015")
+print("Over the period")
+vaccine_dis_data.plot(kind="bar", title="Over the period")
+
+# find the vaccine used in each country
+vaccine_in_country = {}
+for c, v in vaccine.index:
+    vaccine_in_country.setdefault(c, []).append(v)
+
+v_in_c_file = open("data/Vaccine_in_Country.json", "w")
+v_in_c_file.write(json.dumps(vaccine_in_country))
+v_in_c_file.close()
+
+max_num = 0
+for c in vaccine_in_country:
+    if len(vaccine_in_country[c]) >= max_num:
+        max_num = len(vaccine_in_country[c])
+        print(max_num, c)
+print("Maximum number of vaccine a country adopt: {0}".format(max_num))
+
+country_adoption = {}
+for i in range(1, 21):
+    country_adoption.setdefault(i, 0)
+    
+for c in vaccine_in_country:
+    country_adoption[len(vaccine_in_country[c])] += 1
+    
+pp.pprint(country_adoption)
+pd.DataFrame(data=list(country_adoption.items())).set_index(0).plot(kind="bar")
 
 # function for testing time series stationarity using Augmented Dickey-Fuller Test
 # it takes in a time series and significant level as parameters
 # it returns boolean value indicating there are trend in the time series or not
+# 
+# adfuller takes a time series data and test if it is stationary or not
 def test_stationarity(timeseries, sig=0.05):
     dftest = adfuller(timeseries, autolag="AIC")
     if dftest[0] < dftest[4]["1%"]:
@@ -33,10 +102,6 @@ def test_stationarity(timeseries, sig=0.05):
         return 0.10 <= sig
     else:
         return False
-
-###############################
-# test for individual dataset #
-###############################
 
 # test for stationary of under5 for each country
 under5_sig = []
@@ -56,7 +121,7 @@ for c in under5.index:
         under5_sig.append(c)
 print("Country with trend in under 5 mortarity rates")
 pp.pprint(under5_sig)
-input("")
+print("Number of countries that had trends in mortality rates: {0}".format(len(under5_sig)))
 
 # test for stationary of each vaccine in each country
 vaccine_sig = {}
@@ -71,7 +136,7 @@ for c, v in vaccine.index:
         vaccine_sig.setdefault(c, []).append(v)
 print("Vaccine introduced in each country")
 pp.pprint(vaccine_sig)
-input("")
+print("Number of countries that have trend using vaccine: {0}".format(len(vaccine_sig)))
 
 ##########################################
 # test for relationship between datasets #
@@ -85,6 +150,7 @@ def detrend(x, y):
     return [y[i] - trend[i] for i in range(len(y))]
 
 # check if the two data ISO code are inconsistent
+# expected to have no output
 for c, v in vaccine.index:
     if c not in under5.index:
         print(c)
@@ -139,6 +205,10 @@ for c, v in vaccine.index:
         # 
         # grangercausalitytests contains 4 statistical tests to test if past values of the
         # second series has statistically significant effect on current value of the first series
+        #
+        # maximum lag is set to 6 to find vaccine that lead the mortality by at most 5 years
+        # leading more than 5 years are not considered as vaccine should not have effects 
+        # on under 5 mortality for more than 5 years before
         max_lag = 6
         test = gctest(pd.DataFrame(data=d), max_lag, verbose=False)
         # lags stores the possible number of lags with average p-value less than 0.05
@@ -162,6 +232,6 @@ for c, v, l in vaccine_granger_cause:
     vaccine_count[v] += 1
 print("Country with mortarity rate 'Granger caused'")
 pp.pprint(country_improved)
-input("")
+print(len(country_improved))
 print("Counts of vaccine that 'Granger caused' change in mortarity")
 pp.pprint(vaccine_count)
